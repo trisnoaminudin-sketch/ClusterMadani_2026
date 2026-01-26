@@ -1,0 +1,268 @@
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card } from "@/components/ui/card";
+import { toast } from "sonner";
+import { UserPlus } from "lucide-react";
+
+export interface Resident {
+  id: string;
+  nik: string;
+  nomorKK: string;
+  nama: string;
+  jenisKelamin: string;
+  tanggalLahir: string;
+  alamat: string;
+  nomorRumah: string;
+  blokRumah: string;
+  rt: string;
+  rw: string;
+  pekerjaan: string;
+  statusPerkawinan: string;
+  nominalIPL: string;
+  statusIPL: string;
+}
+
+interface AddResidentFormProps {
+  onAddResident: (resident: Resident) => void;
+}
+
+export const AddResidentForm = ({ onAddResident }: AddResidentFormProps) => {
+  const [formData, setFormData] = useState({
+    nik: "",
+    nomorKK: "",
+    nama: "",
+    jenisKelamin: "",
+    tanggalLahir: "",
+    alamat: "",
+    nomorRumah: "",
+    blokRumah: "",
+    rt: "",
+    rw: "",
+    pekerjaan: "",
+    statusPerkawinan: "",
+    nominalIPL: "",
+    statusIPL: "",
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.nik || !formData.nomorKK || !formData.nama || !formData.jenisKelamin || !formData.tanggalLahir) {
+      toast.error("Mohon lengkapi data wajib");
+      return;
+    }
+
+    const newResident: Resident = {
+      id: Date.now().toString(),
+      ...formData,
+    };
+
+    onAddResident(newResident);
+    toast.success("Data warga berhasil ditambahkan");
+    
+    setFormData({
+      nik: "",
+      nomorKK: "",
+      nama: "",
+      jenisKelamin: "",
+      tanggalLahir: "",
+      alamat: "",
+      nomorRumah: "",
+      blokRumah: "",
+      rt: "",
+      rw: "",
+      pekerjaan: "",
+      statusPerkawinan: "",
+      nominalIPL: "",
+      statusIPL: "",
+    });
+  };
+
+  return (
+    <Card className="p-6 border-2">
+      <div className="flex items-center gap-2 mb-6">
+        <UserPlus className="w-5 h-5 text-primary" />
+        <h2 className="text-xl font-bold text-foreground">Tambah Data Warga</h2>
+      </div>
+      
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="nik">NIK *</Label>
+            <Input
+              id="nik"
+              type="text"
+              placeholder="1234567890123456"
+              value={formData.nik}
+              onChange={(e) => setFormData({ ...formData, nik: e.target.value })}
+              maxLength={16}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="nomorKK">Nomor Kartu Keluarga *</Label>
+            <Input
+              id="nomorKK"
+              type="text"
+              placeholder="1234567890123456"
+              value={formData.nomorKK}
+              onChange={(e) => setFormData({ ...formData, nomorKK: e.target.value })}
+              maxLength={16}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="nama">Nama Lengkap *</Label>
+            <Input
+              id="nama"
+              type="text"
+              placeholder="Masukkan nama lengkap"
+              value={formData.nama}
+              onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="jenisKelamin">Jenis Kelamin *</Label>
+            <Select value={formData.jenisKelamin} onValueChange={(value) => setFormData({ ...formData, jenisKelamin: value })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Pilih jenis kelamin" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Laki-laki">Laki-laki</SelectItem>
+                <SelectItem value="Perempuan">Perempuan</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="tanggalLahir">Tanggal Lahir *</Label>
+            <Input
+              id="tanggalLahir"
+              type="date"
+              value={formData.tanggalLahir}
+              onChange={(e) => setFormData({ ...formData, tanggalLahir: e.target.value })}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="nomorRumah">Nomor Rumah</Label>
+            <Input
+              id="nomorRumah"
+              type="text"
+              placeholder="12"
+              value={formData.nomorRumah}
+              onChange={(e) => setFormData({ ...formData, nomorRumah: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="blokRumah">Blok Rumah</Label>
+            <Input
+              id="blokRumah"
+              type="text"
+              placeholder="A"
+              value={formData.blokRumah}
+              onChange={(e) => setFormData({ ...formData, blokRumah: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="rt">RT</Label>
+            <Input
+              id="rt"
+              type="text"
+              placeholder="001"
+              value={formData.rt}
+              onChange={(e) => setFormData({ ...formData, rt: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="rw">RW</Label>
+            <Input
+              id="rw"
+              type="text"
+              placeholder="001"
+              value={formData.rw}
+              onChange={(e) => setFormData({ ...formData, rw: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="pekerjaan">Pekerjaan</Label>
+            <Input
+              id="pekerjaan"
+              type="text"
+              placeholder="Masukkan pekerjaan"
+              value={formData.pekerjaan}
+              onChange={(e) => setFormData({ ...formData, pekerjaan: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="statusPerkawinan">Status Perkawinan</Label>
+            <Select value={formData.statusPerkawinan} onValueChange={(value) => setFormData({ ...formData, statusPerkawinan: value })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Pilih status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Belum Kawin">Belum Kawin</SelectItem>
+                <SelectItem value="Kawin">Kawin</SelectItem>
+                <SelectItem value="Cerai Hidup">Cerai Hidup</SelectItem>
+                <SelectItem value="Cerai Mati">Cerai Mati</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="nominalIPL">Nominal IPL (Rp)</Label>
+            <Input
+              id="nominalIPL"
+              type="number"
+              placeholder="150000"
+              value={formData.nominalIPL}
+              onChange={(e) => setFormData({ ...formData, nominalIPL: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="statusIPL">Status IPL</Label>
+            <Select value={formData.statusIPL} onValueChange={(value) => setFormData({ ...formData, statusIPL: value })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Pilih status IPL" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Lunas">Lunas</SelectItem>
+                <SelectItem value="Belum Lunas">Belum Lunas</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="alamat">Alamat Lengkap</Label>
+          <Input
+            id="alamat"
+            type="text"
+            placeholder="Masukkan alamat lengkap"
+            value={formData.alamat}
+            onChange={(e) => setFormData({ ...formData, alamat: e.target.value })}
+          />
+        </div>
+
+        <Button type="submit" className="w-full md:w-auto">
+          <UserPlus className="w-4 h-4 mr-2" />
+          Tambah Warga
+        </Button>
+      </form>
+    </Card>
+  );
+};
