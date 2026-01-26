@@ -4,32 +4,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
-import { toast } from "sonner";
-import { UserPlus } from "lucide-react";
-
-export interface Resident {
-  id: string;
-  nik: string;
-  nomorKK: string;
-  nama: string;
-  jenisKelamin: string;
-  tanggalLahir: string;
-  alamat: string;
-  nomorRumah: string;
-  blokRumah: string;
-  rt: string;
-  rw: string;
-  pekerjaan: string;
-  statusPerkawinan: string;
-  nominalIPL: string;
-  statusIPL: string;
-}
+import { UserPlus, Loader2 } from "lucide-react";
+import { Resident } from "@/hooks/useResidents";
 
 interface AddResidentFormProps {
-  onAddResident: (resident: Resident) => void;
+  onAddResident: (resident: Omit<Resident, 'id'>) => void;
+  isLoading?: boolean;
 }
 
-export const AddResidentForm = ({ onAddResident }: AddResidentFormProps) => {
+export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormProps) => {
   const [formData, setFormData] = useState({
     nik: "",
     nomorKK: "",
@@ -51,17 +34,10 @@ export const AddResidentForm = ({ onAddResident }: AddResidentFormProps) => {
     e.preventDefault();
     
     if (!formData.nik || !formData.nomorKK || !formData.nama || !formData.jenisKelamin || !formData.tanggalLahir) {
-      toast.error("Mohon lengkapi data wajib");
       return;
     }
 
-    const newResident: Resident = {
-      id: Date.now().toString(),
-      ...formData,
-    };
-
-    onAddResident(newResident);
-    toast.success("Data warga berhasil ditambahkan");
+    onAddResident(formData);
     
     setFormData({
       nik: "",
@@ -258,9 +234,13 @@ export const AddResidentForm = ({ onAddResident }: AddResidentFormProps) => {
           />
         </div>
 
-        <Button type="submit" className="w-full md:w-auto">
-          <UserPlus className="w-4 h-4 mr-2" />
-          Tambah Warga
+        <Button type="submit" className="w-full md:w-auto" disabled={isLoading}>
+          {isLoading ? (
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+          ) : (
+            <UserPlus className="w-4 h-4 mr-2" />
+          )}
+          {isLoading ? 'Menyimpan...' : 'Tambah Warga'}
         </Button>
       </form>
     </Card>

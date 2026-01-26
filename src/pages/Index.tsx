@@ -1,14 +1,16 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { StatCard } from "@/components/StatCard";
-import { AddResidentForm, Resident } from "@/components/AddResidentForm";
+import { AddResidentForm } from "@/components/AddResidentForm";
 import { ResidentList } from "@/components/ResidentList";
-import { Users, UserCheck, UserX, Calendar, FileText, Banknote, CheckCircle } from "lucide-react";
+import { useResidents, useAddResident, Resident } from "@/hooks/useResidents";
+import { Users, UserCheck, UserX, Calendar, FileText, Banknote, CheckCircle, Loader2 } from "lucide-react";
 
 const Index = () => {
-  const [residents, setResidents] = useState<Resident[]>([]);
+  const { data: residents = [], isLoading, error } = useResidents();
+  const addResidentMutation = useAddResident();
 
-  const handleAddResident = (resident: Resident) => {
-    setResidents([...residents, resident]);
+  const handleAddResident = (resident: Omit<Resident, 'id'>) => {
+    addResidentMutation.mutate(resident);
   };
 
   const stats = useMemo(() => {
@@ -38,6 +40,28 @@ const Index = () => {
 
     return { total, male, female, children, uniqueKK, totalIPL, iplLunas };
   }, [residents]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center">
+        <div className="flex items-center gap-2">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          <span className="text-lg text-muted-foreground">Memuat data...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <p className="text-lg text-destructive">Gagal memuat data</p>
+          <p className="text-sm text-muted-foreground">Pastikan tabel 'residents' sudah dibuat di Supabase</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
@@ -106,7 +130,7 @@ const Index = () => {
         </div>
 
         {/* Form */}
-        <AddResidentForm onAddResident={handleAddResident} />
+        <AddResidentForm onAddResident={handleAddResident} isLoading={addResidentMutation.isPending} />
 
         {/* List */}
         <ResidentList residents={residents} />
