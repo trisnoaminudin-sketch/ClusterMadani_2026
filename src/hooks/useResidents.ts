@@ -104,3 +104,59 @@ export const useAddResident = () => {
     },
   });
 };
+
+export const useUpdateResident = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (resident: Resident) => {
+      const { data, error } = await supabase
+        .from('residents')
+        .update(toDatabase(resident))
+        .eq('id', resident.id)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error updating resident:', error);
+        throw error;
+      }
+      
+      return fromDatabase(data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['residents'] });
+      toast.success('Data warga berhasil diperbarui');
+    },
+    onError: (error) => {
+      console.error('Error updating resident:', error);
+      toast.error('Gagal memperbarui data warga');
+    },
+  });
+};
+
+export const useDeleteResident = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('residents')
+        .delete()
+        .eq('id', id);
+      
+      if (error) {
+        console.error('Error deleting resident:', error);
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['residents'] });
+      toast.success('Data warga berhasil dihapus');
+    },
+    onError: (error) => {
+      console.error('Error deleting resident:', error);
+      toast.error('Gagal menghapus data warga');
+    },
+  });
+};
