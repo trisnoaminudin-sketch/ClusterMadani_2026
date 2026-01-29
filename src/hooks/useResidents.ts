@@ -4,7 +4,9 @@ import { toast } from 'sonner';
 
 export interface FamilyMember {
   nama: string;
+  status: string;
   tanggalLahir: string;
+  jenisKelamin: string;
   noHp: string;
 }
 

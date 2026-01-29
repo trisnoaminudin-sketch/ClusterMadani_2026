@@ -16,7 +16,7 @@ interface EditResidentDialogProps {
   isLoading?: boolean;
 }
 
-const emptyMember = (): FamilyMember => ({ nama: "", tanggalLahir: "", noHp: "" });
+const emptyMember = (): FamilyMember => ({ nama: "", status: "", tanggalLahir: "", jenisKelamin: "", noHp: "" });
 
 export const EditResidentDialog = ({ resident, open, onOpenChange, onSave, isLoading }: EditResidentDialogProps) => {
   const [formData, setFormData] = useState<Resident | null>(null);
@@ -65,9 +65,52 @@ export const EditResidentDialog = ({ resident, open, onOpenChange, onSave, isLoa
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Nomor Kartu Keluarga - Pertama */}
+          <div className="space-y-2">
+            <Label htmlFor="edit-nomorKK">Nomor Kartu Keluarga *</Label>
+            <Input
+              id="edit-nomorKK"
+              type="text"
+              value={formData.nomorKK}
+              onChange={(e) => setFormData({ ...formData, nomorKK: e.target.value })}
+              maxLength={16}
+              required
+            />
+          </div>
+
+          {/* Jumlah Anggota Keluarga - Kedua */}
+          <div className="space-y-2">
+            <Label htmlFor="edit-jumlahAnggota">Jumlah Anggota Keluarga</Label>
+            <Select value={jumlahAnggota} onValueChange={handleJumlahChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Pilih jumlah anggota" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0">0 (Tidak ada)</SelectItem>
+                <SelectItem value="1">1 orang</SelectItem>
+                <SelectItem value="2">2 orang</SelectItem>
+                <SelectItem value="3">3 orang</SelectItem>
+                <SelectItem value="4">4 orang</SelectItem>
+                <SelectItem value="5">5 orang</SelectItem>
+                <SelectItem value="6">6 orang</SelectItem>
+                <SelectItem value="7">7 orang</SelectItem>
+                <SelectItem value="8">8 orang</SelectItem>
+                <SelectItem value="9">9 orang</SelectItem>
+                <SelectItem value="10">10 orang</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Data Anggota Keluarga - Ketiga */}
+          <FamilyMemberFields 
+            members={anggotaKeluarga} 
+            onChange={setAnggotaKeluarga} 
+          />
+
+          {/* Data Lainnya */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-nik">NIK *</Label>
+              <Label htmlFor="edit-nik">NIK Kepala Keluarga *</Label>
               <Input
                 id="edit-nik"
                 type="text"
@@ -79,48 +122,12 @@ export const EditResidentDialog = ({ resident, open, onOpenChange, onSave, isLoa
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="edit-nomorKK">Nomor Kartu Keluarga *</Label>
-              <Input
-                id="edit-nomorKK"
-                type="text"
-                value={formData.nomorKK}
-                onChange={(e) => setFormData({ ...formData, nomorKK: e.target.value })}
-                maxLength={16}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="edit-nama">Nama Lengkap *</Label>
+              <Label htmlFor="edit-nama">Nama Kepala Keluarga *</Label>
               <Input
                 id="edit-nama"
                 type="text"
                 value={formData.nama}
                 onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="edit-jenisKelamin">Jenis Kelamin *</Label>
-              <Select value={formData.jenisKelamin} onValueChange={(value) => setFormData({ ...formData, jenisKelamin: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih jenis kelamin" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Laki-laki">Laki-laki</SelectItem>
-                  <SelectItem value="Perempuan">Perempuan</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="edit-tanggalLahir">Tanggal Lahir *</Label>
-              <Input
-                id="edit-tanggalLahir"
-                type="date"
-                value={formData.tanggalLahir}
-                onChange={(e) => setFormData({ ...formData, tanggalLahir: e.target.value })}
                 required
               />
             </div>
@@ -136,25 +143,27 @@ export const EditResidentDialog = ({ resident, open, onOpenChange, onSave, isLoa
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="edit-jumlahAnggota">Jumlah Anggota Keluarga</Label>
-              <Select value={jumlahAnggota} onValueChange={handleJumlahChange}>
+              <Label htmlFor="edit-jenisKelamin">Jenis Kelamin Kepala Keluarga *</Label>
+              <Select value={formData.jenisKelamin} onValueChange={(value) => setFormData({ ...formData, jenisKelamin: value })}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Pilih jumlah anggota" />
+                  <SelectValue placeholder="Pilih jenis kelamin" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="0">0 (Tidak ada)</SelectItem>
-                  <SelectItem value="1">1 orang</SelectItem>
-                  <SelectItem value="2">2 orang</SelectItem>
-                  <SelectItem value="3">3 orang</SelectItem>
-                  <SelectItem value="4">4 orang</SelectItem>
-                  <SelectItem value="5">5 orang</SelectItem>
-                  <SelectItem value="6">6 orang</SelectItem>
-                  <SelectItem value="7">7 orang</SelectItem>
-                  <SelectItem value="8">8 orang</SelectItem>
-                  <SelectItem value="9">9 orang</SelectItem>
-                  <SelectItem value="10">10 orang</SelectItem>
+                  <SelectItem value="Laki-laki">Laki-laki</SelectItem>
+                  <SelectItem value="Perempuan">Perempuan</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-tanggalLahir">Tanggal Lahir Kepala Keluarga *</Label>
+              <Input
+                id="edit-tanggalLahir"
+                type="date"
+                value={formData.tanggalLahir}
+                onChange={(e) => setFormData({ ...formData, tanggalLahir: e.target.value })}
+                required
+              />
             </div>
 
             <div className="space-y-2">
@@ -255,11 +264,6 @@ export const EditResidentDialog = ({ resident, open, onOpenChange, onSave, isLoa
               onChange={(e) => setFormData({ ...formData, alamat: e.target.value })}
             />
           </div>
-
-          <FamilyMemberFields 
-            members={anggotaKeluarga} 
-            onChange={setAnggotaKeluarga} 
-          />
 
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
