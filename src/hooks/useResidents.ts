@@ -7,6 +7,9 @@ export interface Resident {
   nik: string;
   nomorKK: string;
   nama: string;
+  namaAnggotaKeluarga: string;
+  tanggalLahirAnggota: string;
+  noHp: string;
   jenisKelamin: string;
   tanggalLahir: string;
   alamat: string;
@@ -26,6 +29,9 @@ const fromDatabase = (row: any): Resident => ({
   nik: row.nik,
   nomorKK: row.nomor_kk,
   nama: row.nama,
+  namaAnggotaKeluarga: row.nama_anggota_keluarga || '',
+  tanggalLahirAnggota: row.tanggal_lahir_anggota || '',
+  noHp: row.no_hp || '',
   jenisKelamin: row.jenis_kelamin,
   tanggalLahir: row.tanggal_lahir,
   alamat: row.alamat || '',
@@ -44,6 +50,9 @@ const toDatabase = (resident: Omit<Resident, 'id'>) => ({
   nik: resident.nik,
   nomor_kk: resident.nomorKK,
   nama: resident.nama,
+  nama_anggota_keluarga: resident.namaAnggotaKeluarga || null,
+  tanggal_lahir_anggota: resident.tanggalLahirAnggota || null,
+  no_hp: resident.noHp || null,
   jenis_kelamin: resident.jenisKelamin,
   tanggal_lahir: resident.tanggalLahir,
   alamat: resident.alamat || null,
