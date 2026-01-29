@@ -6,20 +6,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card } from "@/components/ui/card";
 import { UserPlus, Loader2 } from "lucide-react";
 import { Resident } from "@/hooks/useResidents";
+import { FamilyMemberFields, FamilyMember } from "./FamilyMemberFields";
 
 interface AddResidentFormProps {
   onAddResident: (resident: Omit<Resident, 'id'>) => void;
   isLoading?: boolean;
 }
 
+const emptyMember = (): FamilyMember => ({ nama: "", tanggalLahir: "", noHp: "" });
+
 export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormProps) => {
   const [formData, setFormData] = useState({
     nik: "",
     nomorKK: "",
     nama: "",
-    namaAnggotaKeluarga: "",
-    tanggalLahirAnggota: "",
-    noHp: "",
+    noHpKepala: "",
     jenisKelamin: "",
     tanggalLahir: "",
     alamat: "",
@@ -32,6 +33,22 @@ export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormPro
     nominalIPL: "",
     statusIPL: "",
   });
+  
+  const [jumlahAnggota, setJumlahAnggota] = useState("0");
+  const [anggotaKeluarga, setAnggotaKeluarga] = useState<FamilyMember[]>([]);
+
+  const handleJumlahChange = (value: string) => {
+    const count = parseInt(value, 10);
+    setJumlahAnggota(value);
+    
+    const currentLength = anggotaKeluarga.length;
+    if (count > currentLength) {
+      const newMembers = Array(count - currentLength).fill(null).map(() => emptyMember());
+      setAnggotaKeluarga([...anggotaKeluarga, ...newMembers]);
+    } else if (count < currentLength) {
+      setAnggotaKeluarga(anggotaKeluarga.slice(0, count));
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,15 +57,17 @@ export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormPro
       return;
     }
 
-    onAddResident(formData);
+    onAddResident({
+      ...formData,
+      jumlahAnggota: parseInt(jumlahAnggota, 10),
+      anggotaKeluarga: anggotaKeluarga,
+    });
     
     setFormData({
       nik: "",
       nomorKK: "",
       nama: "",
-      namaAnggotaKeluarga: "",
-      tanggalLahirAnggota: "",
-      noHp: "",
+      noHpKepala: "",
       jenisKelamin: "",
       tanggalLahir: "",
       alamat: "",
@@ -61,6 +80,8 @@ export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormPro
       nominalIPL: "",
       statusIPL: "",
     });
+    setJumlahAnggota("0");
+    setAnggotaKeluarga([]);
   };
 
   return (
@@ -111,35 +132,36 @@ export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormPro
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="namaAnggotaKeluarga">Nama Anggota Keluarga</Label>
+            <Label htmlFor="noHpKepala">No. HP Kepala Keluarga</Label>
             <Input
-              id="namaAnggotaKeluarga"
-              type="text"
-              placeholder="Masukkan nama anggota keluarga"
-              value={formData.namaAnggotaKeluarga}
-              onChange={(e) => setFormData({ ...formData, namaAnggotaKeluarga: e.target.value })}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="tanggalLahirAnggota">Tanggal Lahir Anggota</Label>
-            <Input
-              id="tanggalLahirAnggota"
-              type="date"
-              value={formData.tanggalLahirAnggota}
-              onChange={(e) => setFormData({ ...formData, tanggalLahirAnggota: e.target.value })}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="noHp">No. HP</Label>
-            <Input
-              id="noHp"
+              id="noHpKepala"
               type="tel"
               placeholder="08123456789"
-              value={formData.noHp}
-              onChange={(e) => setFormData({ ...formData, noHp: e.target.value })}
+              value={formData.noHpKepala}
+              onChange={(e) => setFormData({ ...formData, noHpKepala: e.target.value })}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="jumlahAnggota">Jumlah Anggota Keluarga</Label>
+            <Select value={jumlahAnggota} onValueChange={handleJumlahChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Pilih jumlah anggota" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0">0 (Tidak ada)</SelectItem>
+                <SelectItem value="1">1 orang</SelectItem>
+                <SelectItem value="2">2 orang</SelectItem>
+                <SelectItem value="3">3 orang</SelectItem>
+                <SelectItem value="4">4 orang</SelectItem>
+                <SelectItem value="5">5 orang</SelectItem>
+                <SelectItem value="6">6 orang</SelectItem>
+                <SelectItem value="7">7 orang</SelectItem>
+                <SelectItem value="8">8 orang</SelectItem>
+                <SelectItem value="9">9 orang</SelectItem>
+                <SelectItem value="10">10 orang</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
@@ -260,6 +282,11 @@ export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormPro
             </Select>
           </div>
         </div>
+
+        <FamilyMemberFields 
+          members={anggotaKeluarga} 
+          onChange={setAnggotaKeluarga} 
+        />
 
         <div className="space-y-2">
           <Label htmlFor="alamat">Alamat Lengkap</Label>

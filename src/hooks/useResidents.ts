@@ -2,14 +2,20 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+export interface FamilyMember {
+  nama: string;
+  tanggalLahir: string;
+  noHp: string;
+}
+
 export interface Resident {
   id: string;
   nik: string;
   nomorKK: string;
   nama: string;
-  namaAnggotaKeluarga: string;
-  tanggalLahirAnggota: string;
-  noHp: string;
+  noHpKepala: string;
+  jumlahAnggota: number;
+  anggotaKeluarga: FamilyMember[];
   jenisKelamin: string;
   tanggalLahir: string;
   alamat: string;
@@ -29,9 +35,9 @@ const fromDatabase = (row: any): Resident => ({
   nik: row.nik,
   nomorKK: row.nomor_kk,
   nama: row.nama,
-  namaAnggotaKeluarga: row.nama_anggota_keluarga || '',
-  tanggalLahirAnggota: row.tanggal_lahir_anggota || '',
-  noHp: row.no_hp || '',
+  noHpKepala: row.no_hp_kepala || '',
+  jumlahAnggota: row.jumlah_anggota || 0,
+  anggotaKeluarga: row.anggota_keluarga || [],
   jenisKelamin: row.jenis_kelamin,
   tanggalLahir: row.tanggal_lahir,
   alamat: row.alamat || '',
@@ -50,9 +56,9 @@ const toDatabase = (resident: Omit<Resident, 'id'>) => ({
   nik: resident.nik,
   nomor_kk: resident.nomorKK,
   nama: resident.nama,
-  nama_anggota_keluarga: resident.namaAnggotaKeluarga || null,
-  tanggal_lahir_anggota: resident.tanggalLahirAnggota || null,
-  no_hp: resident.noHp || null,
+  no_hp_kepala: resident.noHpKepala || null,
+  jumlah_anggota: resident.jumlahAnggota || 0,
+  anggota_keluarga: resident.anggotaKeluarga || [],
   jenis_kelamin: resident.jenisKelamin,
   tanggal_lahir: resident.tanggalLahir,
   alamat: resident.alamat || null,
