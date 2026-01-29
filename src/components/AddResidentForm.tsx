@@ -17,6 +17,9 @@ export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormPro
     nik: "",
     nomorKK: "",
     nama: "",
+    namaAnggotaKeluarga: "",
+    tanggalLahirAnggota: "",
+    noHp: "",
     jenisKelamin: "",
     tanggalLahir: "",
     alamat: "",
@@ -43,6 +46,9 @@ export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormPro
       nik: "",
       nomorKK: "",
       nama: "",
+      namaAnggotaKeluarga: "",
+      tanggalLahirAnggota: "",
+      noHp: "",
       jenisKelamin: "",
       tanggalLahir: "",
       alamat: "",
@@ -93,14 +99,46 @@ export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormPro
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="nama">Nama Lengkap *</Label>
+            <Label htmlFor="nama">Nama Kepala Keluarga *</Label>
             <Input
               id="nama"
               type="text"
-              placeholder="Masukkan nama lengkap"
+              placeholder="Masukkan nama kepala keluarga"
               value={formData.nama}
               onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
               required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="namaAnggotaKeluarga">Nama Anggota Keluarga</Label>
+            <Input
+              id="namaAnggotaKeluarga"
+              type="text"
+              placeholder="Masukkan nama anggota keluarga"
+              value={formData.namaAnggotaKeluarga}
+              onChange={(e) => setFormData({ ...formData, namaAnggotaKeluarga: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="tanggalLahirAnggota">Tanggal Lahir Anggota</Label>
+            <Input
+              id="tanggalLahirAnggota"
+              type="date"
+              value={formData.tanggalLahirAnggota}
+              onChange={(e) => setFormData({ ...formData, tanggalLahirAnggota: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="noHp">No. HP</Label>
+            <Input
+              id="noHp"
+              type="tel"
+              placeholder="08123456789"
+              value={formData.noHp}
+              onChange={(e) => setFormData({ ...formData, noHp: e.target.value })}
             />
           </div>
 
