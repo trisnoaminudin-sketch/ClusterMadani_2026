@@ -5,7 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
-import { Resident } from "@/hooks/useResidents";
+import { Resident, FamilyMember } from "@/hooks/useResidents";
+import { FamilyMemberFields } from "./FamilyMemberFields";
 
 interface EditResidentDialogProps {
   resident: Resident | null;
@@ -15,19 +16,42 @@ interface EditResidentDialogProps {
   isLoading?: boolean;
 }
 
+const emptyMember = (): FamilyMember => ({ nama: "", tanggalLahir: "", noHp: "" });
+
 export const EditResidentDialog = ({ resident, open, onOpenChange, onSave, isLoading }: EditResidentDialogProps) => {
   const [formData, setFormData] = useState<Resident | null>(null);
+  const [jumlahAnggota, setJumlahAnggota] = useState("0");
+  const [anggotaKeluarga, setAnggotaKeluarga] = useState<FamilyMember[]>([]);
 
   useEffect(() => {
     if (resident) {
       setFormData(resident);
+      setJumlahAnggota(String(resident.jumlahAnggota || 0));
+      setAnggotaKeluarga(resident.anggotaKeluarga || []);
     }
   }, [resident]);
+
+  const handleJumlahChange = (value: string) => {
+    const count = parseInt(value, 10);
+    setJumlahAnggota(value);
+    
+    const currentLength = anggotaKeluarga.length;
+    if (count > currentLength) {
+      const newMembers = Array(count - currentLength).fill(null).map(() => emptyMember());
+      setAnggotaKeluarga([...anggotaKeluarga, ...newMembers]);
+    } else if (count < currentLength) {
+      setAnggotaKeluarga(anggotaKeluarga.slice(0, count));
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (formData) {
-      onSave(formData);
+      onSave({
+        ...formData,
+        jumlahAnggota: parseInt(jumlahAnggota, 10),
+        anggotaKeluarga: anggotaKeluarga,
+      });
     }
   };
 
@@ -99,6 +123,38 @@ export const EditResidentDialog = ({ resident, open, onOpenChange, onSave, isLoa
                 onChange={(e) => setFormData({ ...formData, tanggalLahir: e.target.value })}
                 required
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-noHpKepala">No. HP Kepala Keluarga</Label>
+              <Input
+                id="edit-noHpKepala"
+                type="tel"
+                value={formData.noHpKepala}
+                onChange={(e) => setFormData({ ...formData, noHpKepala: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-jumlahAnggota">Jumlah Anggota Keluarga</Label>
+              <Select value={jumlahAnggota} onValueChange={handleJumlahChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih jumlah anggota" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">0 (Tidak ada)</SelectItem>
+                  <SelectItem value="1">1 orang</SelectItem>
+                  <SelectItem value="2">2 orang</SelectItem>
+                  <SelectItem value="3">3 orang</SelectItem>
+                  <SelectItem value="4">4 orang</SelectItem>
+                  <SelectItem value="5">5 orang</SelectItem>
+                  <SelectItem value="6">6 orang</SelectItem>
+                  <SelectItem value="7">7 orang</SelectItem>
+                  <SelectItem value="8">8 orang</SelectItem>
+                  <SelectItem value="9">9 orang</SelectItem>
+                  <SelectItem value="10">10 orang</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
@@ -199,6 +255,11 @@ export const EditResidentDialog = ({ resident, open, onOpenChange, onSave, isLoa
               onChange={(e) => setFormData({ ...formData, alamat: e.target.value })}
             />
           </div>
+
+          <FamilyMemberFields 
+            members={anggotaKeluarga} 
+            onChange={setAnggotaKeluarga} 
+          />
 
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
