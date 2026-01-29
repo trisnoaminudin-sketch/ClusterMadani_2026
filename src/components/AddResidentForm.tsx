@@ -13,7 +13,7 @@ interface AddResidentFormProps {
   isLoading?: boolean;
 }
 
-const emptyMember = (): FamilyMember => ({ nama: "", tanggalLahir: "", noHp: "" });
+const emptyMember = (): FamilyMember => ({ nama: "", status: "", tanggalLahir: "", jenisKelamin: "", noHp: "" });
 
 export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormProps) => {
   const [formData, setFormData] = useState({
@@ -92,28 +92,59 @@ export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormPro
       </div>
       
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Nomor Kartu Keluarga - Pertama */}
+        <div className="space-y-2">
+          <Label htmlFor="nomorKK">Nomor Kartu Keluarga *</Label>
+          <Input
+            id="nomorKK"
+            type="text"
+            placeholder="1234567890123456"
+            value={formData.nomorKK}
+            onChange={(e) => setFormData({ ...formData, nomorKK: e.target.value })}
+            maxLength={16}
+            required
+          />
+        </div>
+
+        {/* Jumlah Anggota Keluarga - Kedua */}
+        <div className="space-y-2">
+          <Label htmlFor="jumlahAnggota">Jumlah Anggota Keluarga</Label>
+          <Select value={jumlahAnggota} onValueChange={handleJumlahChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Pilih jumlah anggota" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="0">0 (Tidak ada)</SelectItem>
+              <SelectItem value="1">1 orang</SelectItem>
+              <SelectItem value="2">2 orang</SelectItem>
+              <SelectItem value="3">3 orang</SelectItem>
+              <SelectItem value="4">4 orang</SelectItem>
+              <SelectItem value="5">5 orang</SelectItem>
+              <SelectItem value="6">6 orang</SelectItem>
+              <SelectItem value="7">7 orang</SelectItem>
+              <SelectItem value="8">8 orang</SelectItem>
+              <SelectItem value="9">9 orang</SelectItem>
+              <SelectItem value="10">10 orang</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Data Anggota Keluarga - Ketiga */}
+        <FamilyMemberFields 
+          members={anggotaKeluarga} 
+          onChange={setAnggotaKeluarga} 
+        />
+
+        {/* Data Lainnya */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="nik">NIK *</Label>
+            <Label htmlFor="nik">NIK Kepala Keluarga *</Label>
             <Input
               id="nik"
               type="text"
               placeholder="1234567890123456"
               value={formData.nik}
               onChange={(e) => setFormData({ ...formData, nik: e.target.value })}
-              maxLength={16}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="nomorKK">Nomor Kartu Keluarga *</Label>
-            <Input
-              id="nomorKK"
-              type="text"
-              placeholder="1234567890123456"
-              value={formData.nomorKK}
-              onChange={(e) => setFormData({ ...formData, nomorKK: e.target.value })}
               maxLength={16}
               required
             />
@@ -143,29 +174,7 @@ export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormPro
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="jumlahAnggota">Jumlah Anggota Keluarga</Label>
-            <Select value={jumlahAnggota} onValueChange={handleJumlahChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Pilih jumlah anggota" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="0">0 (Tidak ada)</SelectItem>
-                <SelectItem value="1">1 orang</SelectItem>
-                <SelectItem value="2">2 orang</SelectItem>
-                <SelectItem value="3">3 orang</SelectItem>
-                <SelectItem value="4">4 orang</SelectItem>
-                <SelectItem value="5">5 orang</SelectItem>
-                <SelectItem value="6">6 orang</SelectItem>
-                <SelectItem value="7">7 orang</SelectItem>
-                <SelectItem value="8">8 orang</SelectItem>
-                <SelectItem value="9">9 orang</SelectItem>
-                <SelectItem value="10">10 orang</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="jenisKelamin">Jenis Kelamin *</Label>
+            <Label htmlFor="jenisKelamin">Jenis Kelamin Kepala Keluarga *</Label>
             <Select value={formData.jenisKelamin} onValueChange={(value) => setFormData({ ...formData, jenisKelamin: value })}>
               <SelectTrigger>
                 <SelectValue placeholder="Pilih jenis kelamin" />
@@ -178,7 +187,7 @@ export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormPro
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="tanggalLahir">Tanggal Lahir *</Label>
+            <Label htmlFor="tanggalLahir">Tanggal Lahir Kepala Keluarga *</Label>
             <Input
               id="tanggalLahir"
               type="date"
@@ -282,11 +291,6 @@ export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormPro
             </Select>
           </div>
         </div>
-
-        <FamilyMemberFields 
-          members={anggotaKeluarga} 
-          onChange={setAnggotaKeluarga} 
-        />
 
         <div className="space-y-2">
           <Label htmlFor="alamat">Alamat Lengkap</Label>
