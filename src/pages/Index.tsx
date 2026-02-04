@@ -1,13 +1,23 @@
 import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/StatCard";
 import { AddResidentForm } from "@/components/AddResidentForm";
 import { ResidentList } from "@/components/ResidentList";
 import { useResidents, useAddResident, Resident } from "@/hooks/useResidents";
-import { Users, UserCheck, UserX, Calendar, FileText, Banknote, CheckCircle, Loader2 } from "lucide-react";
+import { Users, UserCheck, UserX, Calendar, FileText, Banknote, CheckCircle, Loader2, LogOut } from "lucide-react";
 
 const Index = () => {
   const { data: residents = [], isLoading, error } = useResidents();
   const addResidentMutation = useAddResident();
+  const navigate = useNavigate();
+  const adminName = localStorage.getItem("adminUser") || "Admin";
+
+  const handleLogout = () => {
+    localStorage.removeItem("isAuthenticated");
+    localStorage.removeItem("adminUser");
+    navigate("/login");
+  };
 
   const handleAddResident = (resident: Omit<Resident, 'id'>) => {
     addResidentMutation.mutate(resident);
@@ -66,14 +76,26 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       <div className="container mx-auto px-4 py-8 space-y-8">
-        {/* Header */}
-        <div className="text-center space-y-2 py-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Sistem Pendataan Warga New Cluster Madani
-          </h1>
-          <p className="text-muted-foreground text-lg">
-            Digitalisasi Data Warga Cluster Madani
-          </p>
+        {/* Header with Logout */}
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-card/50 p-6 rounded-2xl border backdrop-blur-sm">
+          <div className="space-y-1 text-center md:text-left">
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Sistem Pendataan Warga New Cluster Madani
+            </h1>
+            <p className="text-muted-foreground">
+              Digitalisasi Data Warga Cluster Madani
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="text-right hidden sm:block">
+              <p className="text-sm font-medium">Selamat datang,</p>
+              <p className="text-xs text-muted-foreground capitalize">{adminName}</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={handleLogout} className="flex items-center gap-2 hover:bg-destructive hover:text-destructive-foreground transition-all">
+              <LogOut className="w-4 h-4" />
+              Keluar
+            </Button>
+          </div>
         </div>
 
         {/* Statistics */}
