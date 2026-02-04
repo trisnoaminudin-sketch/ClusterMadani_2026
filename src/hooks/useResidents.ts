@@ -8,7 +8,21 @@ export interface FamilyMember {
   tanggalLahir: string;
   jenisKelamin: string;
   noHp: string;
+  nik: string;
+  pekerjaan: string;
+  statusPerkawinan: string;
 }
+
+export const emptyMember = (): FamilyMember => ({
+  nama: "",
+  status: "",
+  tanggalLahir: "",
+  jenisKelamin: "",
+  noHp: "",
+  nik: "",
+  pekerjaan: "",
+  statusPerkawinan: ""
+});
 
 export interface Resident {
   id: string;
@@ -25,8 +39,7 @@ export interface Resident {
   blokRumah: string;
   rt: string;
   rw: string;
-  pekerjaan: string;
-  statusPerkawinan: string;
+  statusKepemilikanRumah: string;
   nominalIPL: string;
   statusIPL: string;
 }
@@ -47,8 +60,7 @@ const fromDatabase = (row: any): Resident => ({
   blokRumah: row.blok_rumah || '',
   rt: row.rt || '',
   rw: row.rw || '',
-  pekerjaan: row.pekerjaan || '',
-  statusPerkawinan: row.status_perkawinan || '',
+  statusKepemilikanRumah: row.status_kepemilikan_rumah || '',
   nominalIPL: row.nominal_ipl?.toString() || '',
   statusIPL: row.status_ipl || '',
 });
@@ -68,8 +80,9 @@ const toDatabase = (resident: Omit<Resident, 'id'>) => ({
   blok_rumah: resident.blokRumah || null,
   rt: resident.rt || null,
   rw: resident.rw || null,
-  pekerjaan: resident.pekerjaan || null,
-  status_perkawinan: resident.statusPerkawinan || null,
+  status_kepemilikan_rumah: resident.statusKepemilikanRumah || null,
+  pekerjaan: null, // Moved to family members
+  status_perkawinan: null, // Moved to family members
   nominal_ipl: resident.nominalIPL ? Number(resident.nominalIPL) : null,
   status_ipl: resident.statusIPL || null,
 });
@@ -82,12 +95,12 @@ export const useResidents = () => {
         .from('residents')
         .select('*')
         .order('created_at', { ascending: false });
-      
+
       if (error) {
         console.error('Error fetching residents:', error);
         throw error;
       }
-      
+
       return data.map(fromDatabase);
     },
   });
@@ -95,7 +108,7 @@ export const useResidents = () => {
 
 export const useAddResident = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async (resident: Omit<Resident, 'id'>) => {
       const { data, error } = await supabase
@@ -103,12 +116,12 @@ export const useAddResident = () => {
         .insert(toDatabase(resident))
         .select()
         .single();
-      
+
       if (error) {
         console.error('Error adding resident:', error);
         throw error;
       }
-      
+
       return fromDatabase(data);
     },
     onSuccess: () => {
@@ -124,7 +137,7 @@ export const useAddResident = () => {
 
 export const useUpdateResident = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async (resident: Resident) => {
       const { data, error } = await supabase
@@ -133,12 +146,12 @@ export const useUpdateResident = () => {
         .eq('id', resident.id)
         .select()
         .single();
-      
+
       if (error) {
         console.error('Error updating resident:', error);
         throw error;
       }
-      
+
       return fromDatabase(data);
     },
     onSuccess: () => {
@@ -154,14 +167,14 @@ export const useUpdateResident = () => {
 
 export const useDeleteResident = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
         .from('residents')
         .delete()
         .eq('id', id);
-      
+
       if (error) {
         console.error('Error deleting resident:', error);
         throw error;

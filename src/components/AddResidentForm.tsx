@@ -5,42 +5,36 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import { UserPlus, Loader2 } from "lucide-react";
-import { Resident } from "@/hooks/useResidents";
-import { FamilyMemberFields, FamilyMember } from "./FamilyMemberFields";
+import { Resident, FamilyMember, emptyMember } from "@/hooks/useResidents";
+import { FamilyMemberFields } from "./FamilyMemberFields";
 
 interface AddResidentFormProps {
   onAddResident: (resident: Omit<Resident, 'id'>) => void;
   isLoading?: boolean;
 }
 
-const emptyMember = (): FamilyMember => ({ nama: "", status: "", tanggalLahir: "", jenisKelamin: "", noHp: "" });
+
 
 export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormProps) => {
   const [formData, setFormData] = useState({
-    nik: "",
     nomorKK: "",
-    nama: "",
-    noHpKepala: "",
-    jenisKelamin: "",
-    tanggalLahir: "",
     alamat: "",
     nomorRumah: "",
     blokRumah: "",
+    statusKepemilikanRumah: "",
     rt: "",
     rw: "",
-    pekerjaan: "",
-    statusPerkawinan: "",
     nominalIPL: "",
     statusIPL: "",
   });
-  
+
   const [jumlahAnggota, setJumlahAnggota] = useState("0");
   const [anggotaKeluarga, setAnggotaKeluarga] = useState<FamilyMember[]>([]);
 
   const handleJumlahChange = (value: string) => {
     const count = parseInt(value, 10);
     setJumlahAnggota(value);
-    
+
     const currentLength = anggotaKeluarga.length;
     if (count > currentLength) {
       const newMembers = Array(count - currentLength).fill(null).map(() => emptyMember());
@@ -52,31 +46,35 @@ export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormPro
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.nik || !formData.nomorKK || !formData.nama || !formData.jenisKelamin || !formData.tanggalLahir) {
+
+    if (!formData.nomorKK) {
       return;
     }
 
+    // Prepare the resident object with defaults for fields that were removed from the form
+    // but might still be required by the backend/database schema.
+    // data.nik and others are taken from family members if available or defaults.
+    const headOfHousehold = anggotaKeluarga.find(m => m.status === "Suami" || m.status === "Kepala Keluarga") || anggotaKeluarga[0] || emptyMember();
+
     onAddResident({
       ...formData,
+      nik: headOfHousehold.nik || "",
+      nama: headOfHousehold.nama || "",
+      noHpKepala: headOfHousehold.noHp || "",
+      jenisKelamin: headOfHousehold.jenisKelamin || "",
+      tanggalLahir: headOfHousehold.tanggalLahir || "",
       jumlahAnggota: parseInt(jumlahAnggota, 10),
       anggotaKeluarga: anggotaKeluarga,
     });
-    
+
     setFormData({
-      nik: "",
       nomorKK: "",
-      nama: "",
-      noHpKepala: "",
-      jenisKelamin: "",
-      tanggalLahir: "",
       alamat: "",
       nomorRumah: "",
       blokRumah: "",
+      statusKepemilikanRumah: "",
       rt: "",
       rw: "",
-      pekerjaan: "",
-      statusPerkawinan: "",
       nominalIPL: "",
       statusIPL: "",
     });
@@ -90,7 +88,7 @@ export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormPro
         <UserPlus className="w-5 h-5 text-primary" />
         <h2 className="text-xl font-bold text-foreground">Tambah Data Warga</h2>
       </div>
-      
+
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Nomor Kartu Keluarga - Pertama */}
         <div className="space-y-2">
@@ -130,73 +128,15 @@ export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormPro
         </div>
 
         {/* Data Anggota Keluarga - Ketiga */}
-        <FamilyMemberFields 
-          members={anggotaKeluarga} 
-          onChange={setAnggotaKeluarga} 
+        <FamilyMemberFields
+          members={anggotaKeluarga}
+          onChange={setAnggotaKeluarga}
         />
 
         {/* Data Lainnya */}
+
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="nik">NIK Kepala Keluarga *</Label>
-            <Input
-              id="nik"
-              type="text"
-              placeholder="1234567890123456"
-              value={formData.nik}
-              onChange={(e) => setFormData({ ...formData, nik: e.target.value })}
-              maxLength={16}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="nama">Nama Kepala Keluarga *</Label>
-            <Input
-              id="nama"
-              type="text"
-              placeholder="Masukkan nama kepala keluarga"
-              value={formData.nama}
-              onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="noHpKepala">No. HP Kepala Keluarga</Label>
-            <Input
-              id="noHpKepala"
-              type="tel"
-              placeholder="08123456789"
-              value={formData.noHpKepala}
-              onChange={(e) => setFormData({ ...formData, noHpKepala: e.target.value })}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="jenisKelamin">Jenis Kelamin Kepala Keluarga *</Label>
-            <Select value={formData.jenisKelamin} onValueChange={(value) => setFormData({ ...formData, jenisKelamin: value })}>
-              <SelectTrigger>
-                <SelectValue placeholder="Pilih jenis kelamin" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Laki-laki">Laki-laki</SelectItem>
-                <SelectItem value="Perempuan">Perempuan</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="tanggalLahir">Tanggal Lahir Kepala Keluarga *</Label>
-            <Input
-              id="tanggalLahir"
-              type="date"
-              value={formData.tanggalLahir}
-              onChange={(e) => setFormData({ ...formData, tanggalLahir: e.target.value })}
-              required
-            />
-          </div>
-
           <div className="space-y-2">
             <Label htmlFor="nomorRumah">Nomor Rumah</Label>
             <Input
@@ -217,6 +157,22 @@ export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormPro
               value={formData.blokRumah}
               onChange={(e) => setFormData({ ...formData, blokRumah: e.target.value })}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="statusKepemilikanRumah">Status Kepemilikan Rumah</Label>
+            <Select value={formData.statusKepemilikanRumah} onValueChange={(value) => setFormData({ ...formData, statusKepemilikanRumah: value })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Pilih status kepemilikan" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Milik Sendiri">Milik Sendiri</SelectItem>
+                <SelectItem value="Kontrak">Kontrak</SelectItem>
+                <SelectItem value="Milik Orang Tua">Milik Orang Tua</SelectItem>
+                <SelectItem value="Milik Saudara">Milik Saudara</SelectItem>
+                <SelectItem value="Lainnya">Lainnya</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
@@ -241,31 +197,7 @@ export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormPro
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="pekerjaan">Pekerjaan</Label>
-            <Input
-              id="pekerjaan"
-              type="text"
-              placeholder="Masukkan pekerjaan"
-              value={formData.pekerjaan}
-              onChange={(e) => setFormData({ ...formData, pekerjaan: e.target.value })}
-            />
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="statusPerkawinan">Status Perkawinan</Label>
-            <Select value={formData.statusPerkawinan} onValueChange={(value) => setFormData({ ...formData, statusPerkawinan: value })}>
-              <SelectTrigger>
-                <SelectValue placeholder="Pilih status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Belum Kawin">Belum Kawin</SelectItem>
-                <SelectItem value="Kawin">Kawin</SelectItem>
-                <SelectItem value="Cerai Hidup">Cerai Hidup</SelectItem>
-                <SelectItem value="Cerai Mati">Cerai Mati</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
 
           <div className="space-y-2">
             <Label htmlFor="nominalIPL">Nominal IPL (Rp)</Label>
@@ -293,11 +225,11 @@ export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormPro
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="alamat">Alamat Lengkap</Label>
+          <Label htmlFor="alamat">Alamat non Madani</Label>
           <Input
             id="alamat"
             type="text"
-            placeholder="Masukkan alamat lengkap"
+            placeholder="Masukkan Alamat non Madani"
             value={formData.alamat}
             onChange={(e) => setFormData({ ...formData, alamat: e.target.value })}
           />

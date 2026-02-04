@@ -4,13 +4,8 @@ import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Users } from "lucide-react";
 
-export interface FamilyMember {
-  nama: string;
-  status: string;
-  tanggalLahir: string;
-  jenisKelamin: string;
-  noHp: string;
-}
+import { FamilyMember } from "@/hooks/useResidents";
+
 
 interface FamilyMemberFieldsProps {
   members: FamilyMember[];
@@ -32,13 +27,25 @@ export const FamilyMemberFields = ({ members, onChange }: FamilyMemberFieldsProp
         <Users className="w-4 h-4 text-primary" />
         <h3 className="font-semibold text-foreground">Data Anggota Keluarga</h3>
       </div>
-      
+
       {members.map((member, index) => (
         <Card key={index} className="p-4 border">
           <h4 className="font-medium text-sm text-muted-foreground mb-3">
             Anggota Keluarga {index + 1}
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor={`member-nik-${index}`}>NIK</Label>
+              <Input
+                id={`member-nik-${index}`}
+                type="text"
+                placeholder="1234567890123456"
+                value={member.nik || ''}
+                onChange={(e) => updateMember(index, 'nik', e.target.value)}
+                maxLength={16}
+              />
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor={`member-nama-${index}`}>Nama</Label>
               <Input
@@ -52,8 +59,8 @@ export const FamilyMemberFields = ({ members, onChange }: FamilyMemberFieldsProp
 
             <div className="space-y-2">
               <Label htmlFor={`member-status-${index}`}>Status</Label>
-              <Select 
-                value={member.status} 
+              <Select
+                value={member.status}
                 onValueChange={(value) => updateMember(index, 'status', value)}
               >
                 <SelectTrigger>
@@ -64,10 +71,11 @@ export const FamilyMemberFields = ({ members, onChange }: FamilyMemberFieldsProp
                   <SelectItem value="Istri">Istri</SelectItem>
                   <SelectItem value="Anak">Anak</SelectItem>
                   <SelectItem value="Saudara">Saudara</SelectItem>
+                  <SelectItem value="Sendiri/Lajang">Sendiri/Lajang</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor={`member-tgl-${index}`}>Tanggal Lahir</Label>
               <Input
@@ -79,9 +87,38 @@ export const FamilyMemberFields = ({ members, onChange }: FamilyMemberFieldsProp
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor={`member-pekerjaan-${index}`}>Pekerjaan</Label>
+              <Input
+                id={`member-pekerjaan-${index}`}
+                type="text"
+                placeholder="Pekerjaan"
+                value={member.pekerjaan || ''}
+                onChange={(e) => updateMember(index, 'pekerjaan', e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor={`member-kawin-${index}`}>Status Perkawinan</Label>
+              <Select
+                value={member.statusPerkawinan || ''}
+                onValueChange={(value) => updateMember(index, 'statusPerkawinan', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Belum Kawin">Belum Kawin</SelectItem>
+                  <SelectItem value="Kawin">Kawin</SelectItem>
+                  <SelectItem value="Cerai Hidup">Cerai Hidup</SelectItem>
+                  <SelectItem value="Cerai Mati">Cerai Mati</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor={`member-jk-${index}`}>Jenis Kelamin</Label>
-              <Select 
-                value={member.jenisKelamin} 
+              <Select
+                value={member.jenisKelamin}
                 onValueChange={(value) => updateMember(index, 'jenisKelamin', value)}
               >
                 <SelectTrigger>
@@ -93,7 +130,7 @@ export const FamilyMemberFields = ({ members, onChange }: FamilyMemberFieldsProp
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor={`member-hp-${index}`}>No. HP</Label>
               <Input

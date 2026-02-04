@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
-import { Resident, FamilyMember } from "@/hooks/useResidents";
+import { Resident, FamilyMember, emptyMember } from "@/hooks/useResidents";
 import { FamilyMemberFields } from "./FamilyMemberFields";
 
 interface EditResidentDialogProps {
@@ -16,7 +16,7 @@ interface EditResidentDialogProps {
   isLoading?: boolean;
 }
 
-const emptyMember = (): FamilyMember => ({ nama: "", status: "", tanggalLahir: "", jenisKelamin: "", noHp: "" });
+
 
 export const EditResidentDialog = ({ resident, open, onOpenChange, onSave, isLoading }: EditResidentDialogProps) => {
   const [formData, setFormData] = useState<Resident | null>(null);
@@ -34,7 +34,7 @@ export const EditResidentDialog = ({ resident, open, onOpenChange, onSave, isLoa
   const handleJumlahChange = (value: string) => {
     const count = parseInt(value, 10);
     setJumlahAnggota(value);
-    
+
     const currentLength = anggotaKeluarga.length;
     if (count > currentLength) {
       const newMembers = Array(count - currentLength).fill(null).map(() => emptyMember());
@@ -63,7 +63,7 @@ export const EditResidentDialog = ({ resident, open, onOpenChange, onSave, isLoa
         <DialogHeader>
           <DialogTitle>Edit Data Warga</DialogTitle>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Nomor Kartu Keluarga - Pertama */}
           <div className="space-y-2">
@@ -102,70 +102,14 @@ export const EditResidentDialog = ({ resident, open, onOpenChange, onSave, isLoa
           </div>
 
           {/* Data Anggota Keluarga - Ketiga */}
-          <FamilyMemberFields 
-            members={anggotaKeluarga} 
-            onChange={setAnggotaKeluarga} 
+          <FamilyMemberFields
+            members={anggotaKeluarga}
+            onChange={setAnggotaKeluarga}
           />
 
-          {/* Data Lainnya */}
+
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-nik">NIK Kepala Keluarga *</Label>
-              <Input
-                id="edit-nik"
-                type="text"
-                value={formData.nik}
-                onChange={(e) => setFormData({ ...formData, nik: e.target.value })}
-                maxLength={16}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="edit-nama">Nama Kepala Keluarga *</Label>
-              <Input
-                id="edit-nama"
-                type="text"
-                value={formData.nama}
-                onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="edit-noHpKepala">No. HP Kepala Keluarga</Label>
-              <Input
-                id="edit-noHpKepala"
-                type="tel"
-                value={formData.noHpKepala}
-                onChange={(e) => setFormData({ ...formData, noHpKepala: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="edit-jenisKelamin">Jenis Kelamin Kepala Keluarga *</Label>
-              <Select value={formData.jenisKelamin} onValueChange={(value) => setFormData({ ...formData, jenisKelamin: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih jenis kelamin" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Laki-laki">Laki-laki</SelectItem>
-                  <SelectItem value="Perempuan">Perempuan</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="edit-tanggalLahir">Tanggal Lahir Kepala Keluarga *</Label>
-              <Input
-                id="edit-tanggalLahir"
-                type="date"
-                value={formData.tanggalLahir}
-                onChange={(e) => setFormData({ ...formData, tanggalLahir: e.target.value })}
-                required
-              />
-            </div>
-
             <div className="space-y-2">
               <Label htmlFor="edit-nomorRumah">Nomor Rumah</Label>
               <Input
@@ -184,6 +128,22 @@ export const EditResidentDialog = ({ resident, open, onOpenChange, onSave, isLoa
                 value={formData.blokRumah}
                 onChange={(e) => setFormData({ ...formData, blokRumah: e.target.value })}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-statusKepemilikanRumah">Status Kepemilikan Rumah</Label>
+              <Select value={formData.statusKepemilikanRumah} onValueChange={(value) => setFormData({ ...formData, statusKepemilikanRumah: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih status kepemilikan" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Milik Sendiri">Milik Sendiri</SelectItem>
+                  <SelectItem value="Kontrak">Kontrak</SelectItem>
+                  <SelectItem value="Milik Orang Tua">Milik Orang Tua</SelectItem>
+                  <SelectItem value="Milik Saudara">Milik Saudara</SelectItem>
+                  <SelectItem value="Lainnya">Lainnya</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
@@ -206,30 +166,7 @@ export const EditResidentDialog = ({ resident, open, onOpenChange, onSave, isLoa
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="edit-pekerjaan">Pekerjaan</Label>
-              <Input
-                id="edit-pekerjaan"
-                type="text"
-                value={formData.pekerjaan}
-                onChange={(e) => setFormData({ ...formData, pekerjaan: e.target.value })}
-              />
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="edit-statusPerkawinan">Status Perkawinan</Label>
-              <Select value={formData.statusPerkawinan} onValueChange={(value) => setFormData({ ...formData, statusPerkawinan: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Belum Kawin">Belum Kawin</SelectItem>
-                  <SelectItem value="Kawin">Kawin</SelectItem>
-                  <SelectItem value="Cerai Hidup">Cerai Hidup</SelectItem>
-                  <SelectItem value="Cerai Mati">Cerai Mati</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
 
             <div className="space-y-2">
               <Label htmlFor="edit-nominalIPL">Nominal IPL (Rp)</Label>
@@ -256,7 +193,7 @@ export const EditResidentDialog = ({ resident, open, onOpenChange, onSave, isLoa
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="edit-alamat">Alamat Lengkap</Label>
+            <Label htmlFor="edit-alamat">Alamat non Madani</Label>
             <Input
               id="edit-alamat"
               type="text"
@@ -282,6 +219,6 @@ export const EditResidentDialog = ({ resident, open, onOpenChange, onSave, isLoa
           </div>
         </form>
       </DialogContent>
-    </Dialog>
+    </Dialog >
   );
 };

@@ -17,7 +17,7 @@ const Index = () => {
     const total = residents.length;
     const male = residents.filter((r) => r.jenisKelamin === "Laki-laki").length;
     const female = residents.filter((r) => r.jenisKelamin === "Perempuan").length;
-    
+
     const calculateAge = (birthDate: string) => {
       const today = new Date();
       const birth = new Date(birthDate);
@@ -30,7 +30,7 @@ const Index = () => {
     };
 
     const children = residents.filter((r) => calculateAge(r.tanggalLahir) < 18).length;
-    
+
     // Hitung jumlah KK unik
     const uniqueKK = new Set(residents.map((r) => r.nomorKK)).size;
 
@@ -69,10 +69,10 @@ const Index = () => {
         {/* Header */}
         <div className="text-center space-y-2 py-8">
           <h1 className="text-4xl md:text-5xl font-bold text-foreground bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Sistem Pendataan Warga RT
+            Sistem Pendataan Warga New Cluster Madani
           </h1>
           <p className="text-muted-foreground text-lg">
-            Kelola data warga lingkungan RT dengan mudah dan sistematis
+            Digitalisasi Data Warga Cluster Madani
           </p>
         </div>
 
