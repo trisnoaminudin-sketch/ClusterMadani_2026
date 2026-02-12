@@ -5,7 +5,7 @@ import { StatCard } from "@/components/StatCard";
 import { AddResidentForm } from "@/components/AddResidentForm";
 import { ResidentList } from "@/components/ResidentList";
 import { useResidents, useAddResident, Resident } from "@/hooks/useResidents";
-import { Users, UserCheck, UserX, Calendar, FileText, Banknote, CheckCircle, Loader2, LogOut } from "lucide-react";
+import { Users, UserCheck, UserX, Calendar, FileText, Banknote, CheckCircle, Loader2, LogOut, Download } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -28,6 +28,56 @@ const Index = () => {
 
   const handleAddResident = (resident: Omit<Resident, 'id'>) => {
     addResidentMutation.mutate(resident);
+  };
+
+  const handleExportData = () => {
+    if (residents.length === 0) return;
+
+    // Header untuk CSV
+    const headers = [
+      "Nama", "NIK", "No KK", "Status Hubungan", "Blok", "No Rumah", "RT", "RW",
+      "Jenis Kelamin", "Tanggal Lahir", "Pekerjaan", "Status Perkawinan",
+      "Status Rumah", "Nominal IPL", "Status IPL", "No HP Kepala"
+    ];
+
+    // Buat baris data: mendatarkan (flatten) semua anggota keluarga
+    const rows = residents.flatMap(resident => {
+      return (resident.anggotaKeluarga || []).map(member => [
+        member.nama,
+        member.nik,
+        resident.nomorKK,
+        member.status,
+        resident.blokRumah,
+        resident.nomorRumah,
+        resident.rt,
+        resident.rw,
+        member.jenisKelamin,
+        member.tanggalLahir,
+        member.pekerjaan,
+        member.statusPerkawinan,
+        resident.statusKepemilikanRumah,
+        resident.nominalIPL,
+        resident.statusIPL,
+        resident.noHpKepala
+      ]);
+    });
+
+    // Gabungkan header dan baris menjadi format CSV
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(row => row.map(cell => `"${(cell || "").toString().replace(/"/g, '""')}"`).join(","))
+    ].join("\n");
+
+    // Buat file blob dan trigger download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Data_Warga_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const stats = useMemo(() => {
@@ -87,33 +137,45 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       <div className="container mx-auto px-4 py-8 space-y-8">
-        {/* Header with Logout and Admin Menu */}
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-card/50 p-6 rounded-2xl border backdrop-blur-sm">
-          <div className="space-y-1 text-center md:text-left">
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Sistem Pendataan Warga New Cluster Madani
+        {/* Simplified Header */}
+        <div className="flex flex-col md:flex-row justify-between items-center bg-card/60 p-6 rounded-2xl border backdrop-blur-md gap-6">
+          <div className="space-y-2 text-center md:text-left">
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground">
+              Cluster Madani <span className="text-primary tracking-normal font-medium text-lg ml-1 opacity-80">(Data Warga)</span>
             </h1>
-            <p className="text-muted-foreground">
-              {userRole === 'admin' ? 'Digitalisasi Data Warga Cluster Madani' : `Rumah: Blok ${restrictedBlok} No ${restrictedNomorRumah}`}
-            </p>
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full text-xs font-semibold text-primary border border-primary/20">
+              <Calendar className="w-3 h-3" />
+              {userRole === 'admin' ? 'Dashboard Administrator' : `Blok ${restrictedBlok} No ${restrictedNomorRumah}`}
+            </div>
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-4">
-            <div className="text-right hidden sm:block">
-              <p className="text-sm font-medium">Selamat datang,</p>
-              <p className="text-xs text-muted-foreground capitalize">{adminName} ({userRole})</p>
+
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <div className="flex flex-col items-center sm:items-end">
+              <span className="text-xs text-muted-foreground font-medium uppercase tracking-widest">User Aktif</span>
+              <span className="text-sm font-bold text-foreground capitalize">{adminName}</span>
             </div>
 
-            {userRole === "admin" && (
-              <Button variant="secondary" size="sm" onClick={() => navigate("/admin/users")} className="flex items-center gap-2">
-                <Users className="w-4 h-4" />
-                Kelola User
-              </Button>
-            )}
+            <div className="h-8 w-px bg-border hidden sm:block" />
 
-            <Button variant="outline" size="sm" onClick={handleLogout} className="flex items-center gap-2 hover:bg-destructive hover:text-destructive-foreground transition-all">
-              <LogOut className="w-4 h-4" />
-              Keluar
-            </Button>
+            <div className="flex items-center gap-2">
+              {userRole === "admin" && (
+                <>
+                  <Button variant="outline" size="sm" onClick={() => navigate("/admin/users")} className="gap-2 h-9 rounded-full border-primary/20 hover:border-primary hover:bg-primary/5 transition-all">
+                    <Users className="w-4 h-4" />
+                    <span className="hidden lg:inline">Kelola User</span>
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleExportData} className="gap-2 h-9 rounded-full border-primary/20 hover:border-primary hover:bg-primary/5 transition-all">
+                    <Download className="w-4 h-4" />
+                    <span className="hidden lg:inline">Export</span>
+                  </Button>
+                </>
+              )}
+
+              <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-2 h-9 rounded-full text-destructive hover:bg-destructive/10 hover:text-white hover:bg-destructive transition-all">
+                <LogOut className="w-4 h-4" />
+                <span>Keluar</span>
+              </Button>
+            </div>
           </div>
         </div>
 
