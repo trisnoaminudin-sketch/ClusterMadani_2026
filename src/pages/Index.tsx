@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/StatCard";
 import { AddResidentForm } from "@/components/AddResidentForm";
 import { ResidentList } from "@/components/ResidentList";
+import { AdminMenu } from "@/components/AdminMenu";
 import { useResidents, useAddResident, Resident } from "@/hooks/useResidents";
 import { Users, UserCheck, UserX, Calendar, FileText, Banknote, CheckCircle, Loader2, LogOut, Download } from "lucide-react";
 
@@ -149,31 +150,20 @@ const Index = () => {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center gap-4">
-            <div className="flex flex-col items-center sm:items-end">
-              <span className="text-xs text-muted-foreground font-medium uppercase tracking-widest">User Aktif</span>
-              <span className="text-sm font-bold text-foreground capitalize">{adminName}</span>
+          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-4">
+            <div className="flex flex-col items-center sm:items-end text-right">
+              <span className="text-lg font-bold text-primary leading-tight">Selamat datang,</span>
+              <span className="text-sm font-medium text-muted-foreground capitalize">{adminName}</span>
             </div>
-
-            <div className="h-8 w-px bg-border hidden sm:block" />
 
             <div className="flex items-center gap-2">
               {userRole === "admin" && (
-                <>
-                  <Button variant="outline" size="sm" onClick={() => navigate("/admin/users")} className="gap-2 h-9 rounded-full border-primary/20 hover:border-primary hover:bg-primary/5 transition-all">
-                    <Users className="w-4 h-4" />
-                    <span className="hidden lg:inline">Kelola User</span>
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={handleExportData} className="gap-2 h-9 rounded-full border-primary/20 hover:border-primary hover:bg-primary/5 transition-all">
-                    <Download className="w-4 h-4" />
-                    <span className="hidden lg:inline">Export</span>
-                  </Button>
-                </>
+                <AdminMenu onExport={handleExportData} />
               )}
 
-              <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-2 h-9 rounded-full text-destructive hover:bg-destructive/10 hover:text-white hover:bg-destructive transition-all">
+              <Button variant="outline" size="sm" onClick={handleLogout} className="gap-2 h-9 rounded-full border-primary/20 hover:border-destructive hover:bg-destructive hover:text-white transition-all">
                 <LogOut className="w-4 h-4" />
-                <span>Keluar</span>
+                <span className="text-xs font-semibold uppercase tracking-wider">Keluar</span>
               </Button>
             </div>
           </div>
