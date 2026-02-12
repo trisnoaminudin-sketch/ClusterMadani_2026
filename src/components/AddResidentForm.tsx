@@ -16,11 +16,15 @@ interface AddResidentFormProps {
 
 
 export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormProps) => {
+  const userRole = localStorage.getItem("userRole");
+  const restrictedBlok = localStorage.getItem("restrictedBlok");
+  const restrictedNomorRumah = localStorage.getItem("restrictedNomorRumah");
+
   const [formData, setFormData] = useState({
     nomorKK: "",
     alamat: "",
-    nomorRumah: "",
-    blokRumah: "",
+    nomorRumah: userRole === 'admin' ? "" : (restrictedNomorRumah || ""),
+    blokRumah: userRole === 'admin' ? "" : (restrictedBlok || ""),
     statusKepemilikanRumah: "",
     rt: "",
     rw: "",
@@ -63,6 +67,8 @@ export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormPro
       noHpKepala: headOfHousehold.noHp || "",
       jenisKelamin: headOfHousehold.jenisKelamin || "",
       tanggalLahir: headOfHousehold.tanggalLahir || "",
+      pekerjaan: headOfHousehold.pekerjaan || "",
+      statusPerkawinan: headOfHousehold.statusPerkawinan || "",
       jumlahAnggota: parseInt(jumlahAnggota, 10),
       anggotaKeluarga: anggotaKeluarga,
     });
@@ -70,8 +76,8 @@ export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormPro
     setFormData({
       nomorKK: "",
       alamat: "",
-      nomorRumah: "",
-      blokRumah: "",
+      nomorRumah: userRole === 'admin' ? "" : (restrictedNomorRumah || ""),
+      blokRumah: userRole === 'admin' ? "" : (restrictedBlok || ""),
       statusKepemilikanRumah: "",
       rt: "",
       rw: "",
@@ -145,6 +151,7 @@ export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormPro
               placeholder="12"
               value={formData.nomorRumah}
               onChange={(e) => setFormData({ ...formData, nomorRumah: e.target.value })}
+              disabled={userRole !== 'admin'}
             />
           </div>
 
@@ -156,6 +163,7 @@ export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormPro
               placeholder="A"
               value={formData.blokRumah}
               onChange={(e) => setFormData({ ...formData, blokRumah: e.target.value })}
+              disabled={userRole !== 'admin'}
             />
           </div>
 
@@ -199,29 +207,33 @@ export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormPro
 
 
 
-          <div className="space-y-2">
-            <Label htmlFor="nominalIPL">Nominal IPL (Rp)</Label>
-            <Input
-              id="nominalIPL"
-              type="number"
-              placeholder="150000"
-              value={formData.nominalIPL}
-              onChange={(e) => setFormData({ ...formData, nominalIPL: e.target.value })}
-            />
-          </div>
+          {localStorage.getItem("userRole") === "admin" && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="nominalIPL">Nominal IPL (Rp)</Label>
+                <Input
+                  id="nominalIPL"
+                  type="number"
+                  placeholder="150000"
+                  value={formData.nominalIPL}
+                  onChange={(e) => setFormData({ ...formData, nominalIPL: e.target.value })}
+                />
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="statusIPL">Status IPL</Label>
-            <Select value={formData.statusIPL} onValueChange={(value) => setFormData({ ...formData, statusIPL: value })}>
-              <SelectTrigger>
-                <SelectValue placeholder="Pilih status IPL" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Lunas">Lunas</SelectItem>
-                <SelectItem value="Belum Lunas">Belum Lunas</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="statusIPL">Status IPL</Label>
+                <Select value={formData.statusIPL} onValueChange={(value) => setFormData({ ...formData, statusIPL: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih status IPL" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Lunas">Lunas</SelectItem>
+                    <SelectItem value="Belum Lunas">Belum Lunas</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </>
+          )}
         </div>
 
         <div className="space-y-2">

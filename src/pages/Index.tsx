@@ -8,14 +8,21 @@ import { useResidents, useAddResident, Resident } from "@/hooks/useResidents";
 import { Users, UserCheck, UserX, Calendar, FileText, Banknote, CheckCircle, Loader2, LogOut } from "lucide-react";
 
 const Index = () => {
-  const { data: residents = [], isLoading, error } = useResidents();
-  const addResidentMutation = useAddResident();
   const navigate = useNavigate();
-  const adminName = localStorage.getItem("adminUser") || "Admin";
+  const adminName = localStorage.getItem("adminUser") || "User";
+  const userRole = localStorage.getItem("userRole");
+  const restrictedBlok = localStorage.getItem("restrictedBlok");
+  const restrictedNomorRumah = localStorage.getItem("restrictedNomorRumah");
+
+  const { data: residents = [], isLoading, error } = useResidents(restrictedBlok, restrictedNomorRumah);
+  const addResidentMutation = useAddResident();
 
   const handleLogout = () => {
     localStorage.removeItem("isAuthenticated");
     localStorage.removeItem("adminUser");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("restrictedBlok");
+    localStorage.removeItem("restrictedNomorRumah");
     navigate("/login");
   };
 
@@ -24,11 +31,15 @@ const Index = () => {
   };
 
   const stats = useMemo(() => {
-    const total = residents.length;
-    const male = residents.filter((r) => r.jenisKelamin === "Laki-laki").length;
-    const female = residents.filter((r) => r.jenisKelamin === "Perempuan").length;
+    // Ambil semua anggota keluarga dari semua data warga
+    const allMembers = residents.flatMap(r => r.anggotaKeluarga || []);
+
+    const total = allMembers.length;
+    const male = allMembers.filter((m) => m.jenisKelamin === "Laki-laki").length;
+    const female = allMembers.filter((m) => m.jenisKelamin === "Perempuan").length;
 
     const calculateAge = (birthDate: string) => {
+      if (!birthDate) return 0;
       const today = new Date();
       const birth = new Date(birthDate);
       let age = today.getFullYear() - birth.getFullYear();
@@ -39,7 +50,7 @@ const Index = () => {
       return age;
     };
 
-    const children = residents.filter((r) => calculateAge(r.tanggalLahir) < 18).length;
+    const children = allMembers.filter((m) => calculateAge(m.tanggalLahir) < 18).length;
 
     // Hitung jumlah KK unik
     const uniqueKK = new Set(residents.map((r) => r.nomorKK)).size;
@@ -67,7 +78,7 @@ const Index = () => {
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center">
         <div className="text-center space-y-4">
           <p className="text-lg text-destructive">Gagal memuat data</p>
-          <p className="text-sm text-muted-foreground">Pastikan tabel 'residents' sudah dibuat di Supabase</p>
+          <p className="text-sm text-muted-foreground">Pastikan koneksi internet Anda stabil</p>
         </div>
       </div>
     );
@@ -76,21 +87,29 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       <div className="container mx-auto px-4 py-8 space-y-8">
-        {/* Header with Logout */}
+        {/* Header with Logout and Admin Menu */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-card/50 p-6 rounded-2xl border backdrop-blur-sm">
           <div className="space-y-1 text-center md:text-left">
             <h1 className="text-3xl md:text-4xl font-bold text-foreground bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               Sistem Pendataan Warga New Cluster Madani
             </h1>
             <p className="text-muted-foreground">
-              Digitalisasi Data Warga Cluster Madani
+              {userRole === 'admin' ? 'Digitalisasi Data Warga Cluster Madani' : `Rumah: Blok ${restrictedBlok} No ${restrictedNomorRumah}`}
             </p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center justify-center gap-4">
             <div className="text-right hidden sm:block">
               <p className="text-sm font-medium">Selamat datang,</p>
-              <p className="text-xs text-muted-foreground capitalize">{adminName}</p>
+              <p className="text-xs text-muted-foreground capitalize">{adminName} ({userRole})</p>
             </div>
+
+            {userRole === "admin" && (
+              <Button variant="secondary" size="sm" onClick={() => navigate("/admin/users")} className="flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                Kelola User
+              </Button>
+            )}
+
             <Button variant="outline" size="sm" onClick={handleLogout} className="flex items-center gap-2 hover:bg-destructive hover:text-destructive-foreground transition-all">
               <LogOut className="w-4 h-4" />
               Keluar
@@ -98,34 +117,36 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Statistics */}
+        {/* Statistics - Only show full stats for Admin */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
           <StatCard
-            title="Total Warga"
+            title={userRole === 'admin' ? "Total Warga" : "Anggota Keluarga"}
             value={stats.total}
             icon={Users}
-            description="Jumlah seluruh warga"
+            description={userRole === 'admin' ? "Jumlah seluruh warga" : "Jumlah anggota keluarga"}
             variant="primary"
           />
-          <StatCard
-            title="Total KK"
-            value={stats.uniqueKK}
-            icon={FileText}
-            description="Jumlah Kartu Keluarga"
-            variant="accent"
-          />
+          {userRole === 'admin' && (
+            <StatCard
+              title="Total KK"
+              value={stats.uniqueKK}
+              icon={FileText}
+              description="Jumlah Kartu Keluarga"
+              variant="accent"
+            />
+          )}
           <StatCard
             title="Laki-laki"
             value={stats.male}
             icon={UserCheck}
-            description="Warga laki-laki"
+            description="Laki-laki"
             variant="success"
           />
           <StatCard
             title="Perempuan"
             value={stats.female}
             icon={UserX}
-            description="Warga perempuan"
+            description="Perempuan"
             variant="success"
           />
           <StatCard
@@ -136,23 +157,37 @@ const Index = () => {
             variant="default"
           />
           <StatCard
-            title="Total IPL"
+            title="IPL"
             value={`Rp ${stats.totalIPL.toLocaleString('id-ID')}`}
             icon={Banknote}
-            description="Total tagihan IPL"
+            description={userRole === 'admin' ? "Tagihan IPL" : "Tagihan IPL Rumah"}
             variant="primary"
           />
           <StatCard
-            title="IPL Lunas"
-            value={stats.iplLunas}
+            title="Status IPL"
+            value={userRole === 'admin' ? stats.iplLunas : (residents[0]?.statusIPL || "-")}
             icon={CheckCircle}
-            description="Warga yang sudah lunas"
+            description={userRole === 'admin' ? "Warga yang sudah lunas" : "Status pembayaran Anda"}
             variant="success"
           />
         </div>
 
-        {/* Form */}
-        <AddResidentForm onAddResident={handleAddResident} isLoading={addResidentMutation.isPending} />
+        {/* User context: If no residents exist for this house, allow creating the first one (Household record) */}
+        {/* Admin context: Can always add residents */}
+        {(userRole === "admin" || residents.length === 0) && (
+          <div className="space-y-4">
+            <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg text-sm text-primary">
+              {userRole === "admin"
+                ? "Admin dapat menambahkan warga baru ke blok dan nomor rumah mana saja."
+                : "Sepertinya data keluarga Anda belum terdaftar. Silakan isi form di bawah untuk mendaftarkan data keluarga Anda."}
+            </div>
+            <AddResidentForm
+              onAddResident={handleAddResident}
+              isLoading={addResidentMutation.isPending}
+            // We could pass prefilled data here if needed
+            />
+          </div>
+        )}
 
         {/* List */}
         <ResidentList residents={residents} />

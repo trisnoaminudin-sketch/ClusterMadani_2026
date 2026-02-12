@@ -117,6 +117,7 @@ export const EditResidentDialog = ({ resident, open, onOpenChange, onSave, isLoa
                 type="text"
                 value={formData.nomorRumah}
                 onChange={(e) => setFormData({ ...formData, nomorRumah: e.target.value })}
+                disabled={localStorage.getItem("userRole") !== 'admin'}
               />
             </div>
 
@@ -127,6 +128,7 @@ export const EditResidentDialog = ({ resident, open, onOpenChange, onSave, isLoa
                 type="text"
                 value={formData.blokRumah}
                 onChange={(e) => setFormData({ ...formData, blokRumah: e.target.value })}
+                disabled={localStorage.getItem("userRole") !== 'admin'}
               />
             </div>
 
@@ -168,28 +170,32 @@ export const EditResidentDialog = ({ resident, open, onOpenChange, onSave, isLoa
 
 
 
-            <div className="space-y-2">
-              <Label htmlFor="edit-nominalIPL">Nominal IPL (Rp)</Label>
-              <Input
-                id="edit-nominalIPL"
-                type="number"
-                value={formData.nominalIPL}
-                onChange={(e) => setFormData({ ...formData, nominalIPL: e.target.value })}
-              />
-            </div>
+            {localStorage.getItem("userRole") === "admin" && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-nominalIPL">Nominal IPL (Rp)</Label>
+                  <Input
+                    id="edit-nominalIPL"
+                    type="number"
+                    value={formData.nominalIPL}
+                    onChange={(e) => setFormData({ ...formData, nominalIPL: e.target.value })}
+                  />
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="edit-statusIPL">Status IPL</Label>
-              <Select value={formData.statusIPL} onValueChange={(value) => setFormData({ ...formData, statusIPL: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih status IPL" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Lunas">Lunas</SelectItem>
-                  <SelectItem value="Belum Lunas">Belum Lunas</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-statusIPL">Status IPL</Label>
+                  <Select value={formData.statusIPL} onValueChange={(value) => setFormData({ ...formData, statusIPL: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih status IPL" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Lunas">Lunas</SelectItem>
+                      <SelectItem value="Belum Lunas">Belum Lunas</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="space-y-2">

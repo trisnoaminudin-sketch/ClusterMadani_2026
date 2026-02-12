@@ -17,7 +17,7 @@ export const ResidentList = ({ residents }: ResidentListProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [editResident, setEditResident] = useState<Resident | null>(null);
   const [deleteResident, setDeleteResident] = useState<Resident | null>(null);
-  
+
   const updateMutation = useUpdateResident();
   const deleteMutation = useDeleteResident();
 
@@ -144,14 +144,16 @@ export const ResidentList = ({ residents }: ResidentListProps) => {
                           >
                             <Pencil className="w-4 h-4" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                            onClick={() => setDeleteResident(resident)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          {localStorage.getItem("userRole") === "admin" && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={() => setDeleteResident(resident)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>

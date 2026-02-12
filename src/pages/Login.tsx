@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Lock, User, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Login = () => {
     const [username, setUsername] = useState("");
@@ -20,22 +21,49 @@ const Login = () => {
         }
     }, [navigate]);
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
 
-        // Artificial delay for premium feel
-        setTimeout(() => {
-            if (username === "trisno" && password === "trisno123") {
-                localStorage.setItem("isAuthenticated", "true");
-                localStorage.setItem("adminUser", "trisno");
-                toast.success("Login Berhasil! Selamat datang, Trisno.");
-                navigate("/", { replace: true });
-            } else {
+        try {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('username', username)
+                .eq('password', password) // In a real app, use hashing!
+                .single();
+
+            if (error || !data) {
                 toast.error("Username atau Password salah.");
                 setIsLoading(false);
+                return;
             }
-        }, 1000);
+
+            localStorage.setItem("isAuthenticated", "true");
+            localStorage.setItem("userRole", data.role);
+            localStorage.setItem("adminUser", data.username);
+
+            if (data.restricted_blok) {
+                localStorage.setItem("restrictedBlok", data.restricted_blok);
+            } else {
+                localStorage.removeItem("restrictedBlok");
+            }
+
+            if (data.restricted_nomor_rumah) {
+                localStorage.setItem("restrictedNomorRumah", data.restricted_nomor_rumah);
+            } else {
+                localStorage.removeItem("restrictedNomorRumah");
+            }
+
+            localStorage.removeItem("restrictedKK"); // Cleanup old key
+
+            toast.success(`Login Berhasil! Selamat datang, ${data.username}.`);
+            navigate("/", { replace: true });
+        } catch (err) {
+            console.error("Login error:", err);
+            toast.error("Terjadi kesalahan saat login.");
+            setIsLoading(false);
+        }
     };
 
     return (

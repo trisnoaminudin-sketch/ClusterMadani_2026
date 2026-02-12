@@ -40,6 +40,8 @@ export interface Resident {
   rt: string;
   rw: string;
   statusKepemilikanRumah: string;
+  pekerjaan: string;
+  statusPerkawinan: string;
   nominalIPL: string;
   statusIPL: string;
 }
@@ -60,41 +62,51 @@ const fromDatabase = (row: any): Resident => ({
   blokRumah: row.blok_rumah || '',
   rt: row.rt || '',
   rw: row.rw || '',
-  statusKepemilikanRumah: row.status_kepemilikan_rumah || '',
-  nominalIPL: row.nominal_ipl?.toString() || '',
-  statusIPL: row.status_ipl || '',
+  statusKepemilikanRumah: row.status_kepemilikan_rumah,
+  pekerjaan: row.pekerjaan,
+  statusPerkawinan: row.status_perkawinan,
+  nominalIPL: row.nominal_ipl,
+  statusIPL: row.status_ipl,
 });
 
 // Convert from frontend format to database format
-const toDatabase = (resident: Omit<Resident, 'id'>) => ({
+const toDatabase = (resident: Partial<Resident>): any => ({
   nik: resident.nik,
   nomor_kk: resident.nomorKK,
   nama: resident.nama,
-  no_hp_kepala: resident.noHpKepala || null,
-  jumlah_anggota: resident.jumlahAnggota || 0,
-  anggota_keluarga: resident.anggotaKeluarga || [],
+  no_hp_kepala: resident.noHpKepala,
+  jumlah_anggota: resident.jumlahAnggota,
+  anggota_keluarga: resident.anggotaKeluarga,
   jenis_kelamin: resident.jenisKelamin,
   tanggal_lahir: resident.tanggalLahir,
-  alamat: resident.alamat || null,
-  nomor_rumah: resident.nomorRumah || null,
-  blok_rumah: resident.blokRumah || null,
-  rt: resident.rt || null,
-  rw: resident.rw || null,
-  status_kepemilikan_rumah: resident.statusKepemilikanRumah || null,
-  pekerjaan: null, // Moved to family members
-  status_perkawinan: null, // Moved to family members
-  nominal_ipl: resident.nominalIPL ? Number(resident.nominalIPL) : null,
-  status_ipl: resident.statusIPL || null,
+  alamat: resident.alamat,
+  nomor_rumah: resident.nomorRumah,
+  blok_rumah: resident.blokRumah,
+  rt: resident.rt,
+  rw: resident.rw,
+  status_kepemilikan_rumah: resident.statusKepemilikanRumah,
+  pekerjaan: resident.pekerjaan,
+  status_perkawinan: resident.statusPerkawinan,
+  nominal_ipl: resident.nominalIPL,
+  status_ipl: resident.statusIPL,
 });
 
-export const useResidents = () => {
+export const useResidents = (blok?: string | null, nomorRumah?: string | null) => {
   return useQuery({
-    queryKey: ['residents'],
+    queryKey: ['residents', blok, nomorRumah],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('residents')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('*');
+
+      if (blok) {
+        query = query.eq('blok_rumah', blok);
+      }
+      if (nomorRumah) {
+        query = query.eq('nomor_rumah', nomorRumah);
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching residents:', error);
