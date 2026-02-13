@@ -6,7 +6,8 @@ import { AddResidentForm } from "@/components/AddResidentForm";
 import { ResidentList } from "@/components/ResidentList";
 import { AdminMenu } from "@/components/AdminMenu";
 import { useResidents, useAddResident, Resident } from "@/hooks/useResidents";
-import { Users, UserCheck, UserX, Calendar, FileText, Banknote, CheckCircle, Loader2, LogOut, Download } from "lucide-react";
+import { useIplSettings } from "@/hooks/useIpl";
+import { Users, UserCheck, UserX, Calendar, FileText, Banknote, CheckCircle, Loader2, LogOut, Download, CreditCard } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ const Index = () => {
   const restrictedNomorRumah = localStorage.getItem("restrictedNomorRumah");
 
   const { data: residents = [], isLoading, error } = useResidents(restrictedBlok, restrictedNomorRumah);
+  const { data: iplSettings } = useIplSettings();
   const addResidentMutation = useAddResident();
 
   const handleLogout = () => {
@@ -209,18 +211,18 @@ const Index = () => {
             variant="default"
           />
           <StatCard
-            title="IPL"
-            value={`Rp ${stats.totalIPL.toLocaleString('id-ID')}`}
+            title="Biaya IPL"
+            value={`Rp ${parseInt(iplSettings?.value || "0").toLocaleString('id-ID')}`}
             icon={Banknote}
-            description={userRole === 'admin' ? "Tagihan IPL" : "Tagihan IPL Rumah"}
+            description="Nominal IPL per bulan"
             variant="primary"
           />
           <StatCard
             title="Status IPL"
-            value={userRole === 'admin' ? stats.iplLunas : (residents[0]?.statusIPL || "-")}
+            value={userRole === 'admin' ? `${stats.iplLunas} Warga` : (residents[0]?.statusIPL || "Belum Lunas")}
             icon={CheckCircle}
-            description={userRole === 'admin' ? "Warga yang sudah lunas" : "Status pembayaran Anda"}
-            variant="success"
+            description={userRole === 'admin' ? "Sudah membayar bulan ini" : "Status pembayaran bulan ini"}
+            variant={userRole !== 'admin' && residents[0]?.statusIPL !== "Lunas" ? "destructive" : "success"}
           />
         </div>
 

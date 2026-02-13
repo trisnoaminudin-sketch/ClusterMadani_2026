@@ -7,6 +7,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import AdminUsers from "./pages/AdminUsers";
+import AdminIpl from "./pages/AdminIpl";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,14 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <AdminUsers />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/ipl"
+            element={
+              <ProtectedRoute>
+                <AdminIpl />
               </ProtectedRoute>
             }
           />

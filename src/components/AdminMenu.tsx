@@ -41,9 +41,9 @@ export const AdminMenu = ({ onExport }: AdminMenuProps) => {
                     <span>Export Data (CSV)</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem disabled className="gap-2 opacity-50">
+                <DropdownMenuItem onClick={() => navigate("/admin/ipl")} className="gap-2">
                     <Database className="w-4 h-4" />
-                    <span>Pengaturan Sistem</span>
+                    <span>Manajemen IPL</span>
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
