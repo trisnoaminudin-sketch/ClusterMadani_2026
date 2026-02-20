@@ -8,7 +8,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Users, Download, Settings, Database, LayoutDashboard } from "lucide-react";
+import { Users, Download, Settings, Database, LayoutDashboard, Upload } from "lucide-react";
 
 interface AdminMenuProps {
     onExport?: () => void;
@@ -39,6 +39,15 @@ export const AdminMenu = ({ onExport }: AdminMenuProps) => {
                 <DropdownMenuItem onClick={onExport} className="gap-2">
                     <Download className="w-4 h-4" />
                     <span>Export Data (CSV)</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate("/admin/users")} className="gap-2 text-primary font-medium">
+                    <Upload className="w-4 h-4" />
+                    <span>Upload Data User</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/")} className="gap-2 text-primary font-medium">
+                    <Upload className="w-4 h-4" />
+                    <span>Upload Data Warga</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate("/admin/ipl")} className="gap-2">

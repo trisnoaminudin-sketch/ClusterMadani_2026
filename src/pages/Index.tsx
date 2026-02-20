@@ -5,9 +5,10 @@ import { StatCard } from "@/components/StatCard";
 import { AddResidentForm } from "@/components/AddResidentForm";
 import { ResidentList } from "@/components/ResidentList";
 import { AdminMenu } from "@/components/AdminMenu";
-import { useResidents, useAddResident, Resident } from "@/hooks/useResidents";
+import { Users, UserCheck, UserX, Calendar, FileText, Banknote, CheckCircle, Loader2, LogOut, Download, CreditCard, Key, Upload } from "lucide-react";
+import { useResidents, useAddResident, Resident, useBulkAddResidents } from "@/hooks/useResidents";
 import { useIplSettings } from "@/hooks/useIpl";
-import { Users, UserCheck, UserX, Calendar, FileText, Banknote, CheckCircle, Loader2, LogOut, Download, CreditCard, Key } from "lucide-react";
+import * as XLSX from "xlsx";
 import { useProfiles, useChangePassword } from "@/hooks/useProfiles";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -25,11 +26,13 @@ const Index = () => {
   const { data: residents = [], isLoading, error } = useResidents(restrictedBlok, restrictedNomorRumah);
   const { data: iplSettings } = useIplSettings();
   const addResidentMutation = useAddResident();
+  const bulkAddResidentMutation = useBulkAddResidents();
   const changePasswordMutation = useChangePassword();
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem("isAuthenticated");
@@ -65,6 +68,99 @@ const Index = () => {
         setConfirmPassword("");
       }
     });
+  };
+
+  const handleDownloadTemplateWarga = () => {
+    const headers = [
+      ["nama", "nik", "nomor_kk", "jenis_kelamin", "tanggal_lahir", "pekerjaan", "status_perkawinan", "alamat", "blok_rumah", "nomor_rumah", "rt", "rw", "status_kepemilikan_rumah", "nominal_ipl", "status_ipl", "no_hp_kepala"]
+    ];
+    const example = [
+      ["Budi Santoso", "1234567890123456", "1234567890123456", "Laki-laki", "1990-01-01", "Karyawan", "Kawin", "Jl. Mawar No. 1", "A", "01", "001", "001", "Milik Sendiri", "150000", "Lunas", "08123456789"]
+    ];
+    const ws = XLSX.utils.aoa_to_sheet([...headers, ...example]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Template Warga");
+    XLSX.writeFile(wb, "Template_Upload_Warga.xlsx");
+  };
+
+  const handleUploadWarga = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const bstr = evt.target?.result;
+        const wb = XLSX.read(bstr, { type: "binary" });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+
+        interface ExcelResident {
+          nama?: string;
+          nik?: string;
+          nomor_kk?: string;
+          jenis_kelamin?: string;
+          tanggal_lahir?: string;
+          pekerjaan?: string;
+          status_perkawinan?: string;
+          alamat?: string;
+          blok_rumah?: string;
+          nomor_rumah?: string;
+          rt?: string;
+          rw?: string;
+          status_kepemilikan_rumah?: string;
+          nominal_ipl?: string;
+          status_ipl?: string;
+          no_hp_kepala?: string;
+        }
+
+        const data = XLSX.utils.sheet_to_json<ExcelResident>(ws);
+
+        const newResidents = data.map((item) => ({
+          nik: String(item.nik || ""),
+          nomorKK: String(item.nomor_kk || ""),
+          nama: String(item.nama || ""),
+          noHpKepala: String(item.no_hp_kepala || ""),
+          jumlahAnggota: 1, // Defaulting to 1 for bulk upload, can be refined
+          anggotaKeluarga: [{
+            nama: String(item.nama || ""),
+            nik: String(item.nik || ""),
+            status: "Kepala Keluarga",
+            jenisKelamin: String(item.jenis_kelamin || ""),
+            tanggalLahir: String(item.tanggal_lahir || ""),
+            pekerjaan: String(item.pekerjaan || ""),
+            statusPerkawinan: String(item.status_perkawinan || ""),
+            noHp: String(item.no_hp_kepala || "")
+          }],
+          jenisKelamin: String(item.jenis_kelamin || ""),
+          tanggalLahir: String(item.tanggal_lahir || ""),
+          alamat: String(item.alamat || ""),
+          nomorRumah: String(item.nomor_rumah || ""),
+          blokRumah: String(item.blok_rumah || ""),
+          rt: String(item.rt || ""),
+          rw: String(item.rw || ""),
+          statusKepemilikanRumah: String(item.status_kepemilikan_rumah || ""),
+          pekerjaan: String(item.pekerjaan || ""),
+          statusPerkawinan: String(item.status_perkawinan || ""),
+          nominalIPL: String(item.nominal_ipl || ""),
+          statusIPL: String(item.status_ipl || "Belum Lunas")
+        }));
+
+        bulkAddResidentMutation.mutate(newResidents, {
+          onSuccess: () => {
+            setIsUploading(false);
+            e.target.value = "";
+          },
+          onError: () => setIsUploading(false)
+        });
+      } catch (err) {
+        console.error(err);
+        toast.error("Gagal memproses file Excel");
+        setIsUploading(false);
+      }
+    };
+    reader.readAsBinaryString(file);
   };
 
   const handleExportData = () => {
@@ -201,6 +297,28 @@ const Index = () => {
                 <LogOut className="w-4 h-4" />
                 <span className="text-xs font-semibold uppercase tracking-wider">Keluar</span>
               </Button>
+
+              {userRole === "admin" && (
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={handleDownloadTemplateWarga} className="gap-2 h-9 rounded-full border-primary/20 hover:bg-primary/5 transition-all">
+                    <Download className="w-4 h-4" />
+                    <span className="hidden lg:inline text-xs font-semibold uppercase tracking-wider">Template Warga</span>
+                  </Button>
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept=".xlsx, .xls"
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      onChange={handleUploadWarga}
+                      disabled={isUploading}
+                    />
+                    <Button variant="secondary" size="sm" className="gap-2 h-9 rounded-full transition-all" disabled={isUploading}>
+                      {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                      <span className="hidden lg:inline text-xs font-semibold uppercase tracking-wider">Upload Warga</span>
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
                 <DialogTrigger asChild>

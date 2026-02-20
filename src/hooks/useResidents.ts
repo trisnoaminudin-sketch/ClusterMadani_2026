@@ -202,3 +202,31 @@ export const useDeleteResident = () => {
     },
   });
 };
+
+export const useBulkAddResidents = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (residents: Omit<Resident, 'id'>[]) => {
+      const { data, error } = await supabase
+        .from('residents')
+        .insert(residents.map(toDatabase))
+        .select();
+
+      if (error) {
+        console.error('Error adding residents:', error);
+        throw error;
+      }
+
+      return data.map(fromDatabase);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['residents'] });
+      toast.success('Daftar warga berhasil diupload');
+    },
+    onError: (error: Error) => {
+      console.error('Error adding residents:', error);
+      toast.error(error.message || 'Gagal mengupload daftar warga');
+    },
+  });
+};
