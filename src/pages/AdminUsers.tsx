@@ -38,10 +38,10 @@ const AdminUsers = () => {
     };
 
     const handleDownloadTemplate = () => {
-        const headers = [["username", "role", "blok", "no_rumah"]];
+        const headers = [["username", "role", "blok", "no_rumah", "password"]];
         const data = [
-            ["admin_test", "admin", "", ""],
-            ["warga_A01", "user", "A", "01"]
+            ["admin_test", "admin", "", "", "pass123"],
+            ["warga_A01", "user", "A", "01", "warga123"]
         ];
         const ws = XLSX.utils.aoa_to_sheet([...headers, ...data]);
         const wb = XLSX.utils.book_new();
@@ -67,13 +67,14 @@ const AdminUsers = () => {
                     role?: string;
                     blok?: string;
                     no_rumah?: string;
+                    password?: string;
                 }
 
                 const data = XLSX.utils.sheet_to_json<ExcelUser>(ws);
 
                 const newProfiles = data.map((item) => ({
                     username: item.username || `user_${Math.random().toString(36).substr(2, 5)}`,
-                    password: generatePassword(),
+                    password: item.password || generatePassword(),
                     role: (item.role || "user") as "admin" | "user",
                     restricted_blok: item.role === "user" ? (item.blok || null) : null,
                     restricted_nomor_rumah: item.role === "user" ? (item.no_rumah || null) : null,
