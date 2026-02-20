@@ -47,30 +47,30 @@ export interface Resident {
 }
 
 // Convert from database format to frontend format
-const fromDatabase = (row: any): Resident => ({
-  id: row.id,
-  nik: row.nik,
-  nomorKK: row.nomor_kk,
-  nama: row.nama,
-  noHpKepala: row.no_hp_kepala || '',
-  jumlahAnggota: row.jumlah_anggota || 0,
-  anggotaKeluarga: row.anggota_keluarga || [],
-  jenisKelamin: row.jenis_kelamin,
-  tanggalLahir: row.tanggal_lahir,
-  alamat: row.alamat || '',
-  nomorRumah: row.nomor_rumah || '',
-  blokRumah: row.blok_rumah || '',
-  rt: row.rt || '',
-  rw: row.rw || '',
-  statusKepemilikanRumah: row.status_kepemilikan_rumah,
-  pekerjaan: row.pekerjaan,
-  statusPerkawinan: row.status_perkawinan,
-  nominalIPL: row.nominal_ipl,
-  statusIPL: row.status_ipl,
+const fromDatabase = (row: Record<string, unknown>): Resident => ({
+  id: row.id as string,
+  nik: row.nik as string,
+  nomorKK: row.nomor_kk as string,
+  nama: row.nama as string,
+  noHpKepala: (row.no_hp_kepala as string) || '',
+  jumlahAnggota: (row.jumlah_anggota as number) || 0,
+  anggotaKeluarga: (row.anggota_keluarga as FamilyMember[]) || [],
+  jenisKelamin: row.jenis_kelamin as string,
+  tanggalLahir: row.tanggal_lahir as string,
+  alamat: (row.alamat as string) || '',
+  nomorRumah: (row.nomor_rumah as string) || '',
+  blokRumah: (row.blok_rumah as string) || '',
+  rt: (row.rt as string) || '',
+  rw: (row.rw as string) || '',
+  statusKepemilikanRumah: row.status_kepemilikan_rumah as string,
+  pekerjaan: row.pekerjaan as string,
+  statusPerkawinan: row.status_perkawinan as string,
+  nominalIPL: row.nominal_ipl as string,
+  statusIPL: row.status_ipl as string,
 });
 
 // Convert from frontend format to database format
-const toDatabase = (resident: Partial<Resident>): any => ({
+const toDatabase = (resident: Partial<Resident>): Record<string, unknown> => ({
   nik: resident.nik,
   nomor_kk: resident.nomorKK,
   nama: resident.nama,

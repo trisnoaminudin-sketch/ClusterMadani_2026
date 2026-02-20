@@ -52,7 +52,7 @@ export const useAddProfile = () => {
       queryClient.invalidateQueries({ queryKey: ['profiles'] });
       toast.success('User berhasil ditambahkan');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('Error adding profile:', error);
       toast.error(error.message || 'Gagal menambahkan user');
     },

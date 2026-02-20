@@ -95,7 +95,7 @@ const AdminUsers = () => {
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="role">Role</Label>
-                                    <Select value={role} onValueChange={(v: any) => setRole(v)}>
+                                    <Select value={role} onValueChange={(v: "admin" | "user") => setRole(v)}>
                                         <SelectTrigger>
                                             <SelectValue placeholder="Pilih Role" />
                                         </SelectTrigger>

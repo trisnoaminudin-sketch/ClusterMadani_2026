@@ -40,7 +40,7 @@ const AdminIpl = () => {
   const { data: residents, isLoading: isLoadingResidents } = useResidents();
   const { data: iplSettings, isLoading: isLoadingSettings } = useIplSettings();
   const { data: paymentHistory, isLoading: isLoadingHistory } = useIplPayments();
-  
+
   const updateSettingsMutation = useUpdateIplSettings();
   const payMutation = usePayIpl();
   const resetMutation = useResetIplStatus();
@@ -62,7 +62,7 @@ const AdminIpl = () => {
 
   const handleReset = (residentId: string) => {
     if (confirm("Apakah anda yakin ingin mengubah status menjadi Belum Lunas?")) {
-        resetMutation.mutate(residentId);
+      resetMutation.mutate(residentId);
     }
   };
 
@@ -231,7 +231,14 @@ const AdminIpl = () => {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      paymentHistory?.map((payment: any) => (
+                      paymentHistory?.map((payment: {
+                        id: string;
+                        payment_date: string;
+                        residents: { nama: string; blok_rumah: string; nomor_rumah: string } | null;
+                        period: string;
+                        amount: string;
+                        status: string
+                      }) => (
                         <TableRow key={payment.id}>
                           <TableCell>
                             {format(new Date(payment.payment_date), "dd MMM yyyy HH:mm", {
@@ -247,7 +254,7 @@ const AdminIpl = () => {
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline" className="text-green-600 border-green-600">
-                                {payment.status}
+                              {payment.status}
                             </Badge>
                           </TableCell>
                         </TableRow>
@@ -283,11 +290,11 @@ const AdminIpl = () => {
                     Nilai ini akan muncul di dashboard semua warga.
                   </p>
                 </div>
-                <Button 
-                    onClick={handleSaveSettings} 
-                    disabled={updateSettingsMutation.isPending}
+                <Button
+                  onClick={handleSaveSettings}
+                  disabled={updateSettingsMutation.isPending}
                 >
-                    {updateSettingsMutation.isPending ? "Menyimpan..." : "Simpan Perubahan"}
+                  {updateSettingsMutation.isPending ? "Menyimpan..." : "Simpan Perubahan"}
                 </Button>
               </div>
             </CardContent>
