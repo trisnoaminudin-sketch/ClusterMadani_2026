@@ -7,9 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useProfiles, useAddProfile, useDeleteProfile, useBulkAddProfiles } from "@/hooks/useProfiles";
-import { Trash2, UserPlus, ArrowLeft, Loader2, Download, Upload } from "lucide-react";
+import { Trash2, UserPlus, ArrowLeft, Loader2, Download, Upload, Eye, EyeOff, Save } from "lucide-react";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const AdminUsers = () => {
     const navigate = useNavigate();
@@ -24,6 +25,8 @@ const AdminUsers = () => {
     const [restrictedBlok, setRestrictedBlok] = useState("");
     const [restrictedNomorRumah, setRestrictedNomorRumah] = useState("");
     const [isUploading, setIsUploading] = useState(false);
+    const [uploadResults, setUploadResults] = useState<{ username: string; password: string; role: string }[] | null>(null);
+    const [isResultsOpen, setIsResultsOpen] = useState(false);
 
     const generatePassword = () => {
         const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -79,6 +82,8 @@ const AdminUsers = () => {
                 bulkAddMutation.mutate(newProfiles, {
                     onSuccess: () => {
                         setIsUploading(false);
+                        setUploadResults(newProfiles);
+                        setIsResultsOpen(true);
                         e.target.value = ""; // clear input
                     },
                     onError: () => setIsUploading(false)
@@ -90,6 +95,14 @@ const AdminUsers = () => {
             }
         };
         reader.readAsBinaryString(file);
+    };
+
+    const handleExportResults = () => {
+        if (!uploadResults) return;
+        const ws = XLSX.utils.json_to_sheet(uploadResults);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Hasil Upload");
+        XLSX.writeFile(wb, "Hasil_Upload_Password.xlsx");
     };
 
     const handleAddUser = (e: React.FormEvent) => {
@@ -278,6 +291,55 @@ const AdminUsers = () => {
                         </CardContent>
                     </Card>
                 </div>
+
+                {/* Results Dialog */}
+                <Dialog open={isResultsOpen} onOpenChange={setIsResultsOpen}>
+                    <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2">
+                                <Save className="w-5 h-5 text-success" />
+                                Hasil Upload & Password
+                            </DialogTitle>
+                            <DialogDescription>
+                                Berikut adalah daftar user yang baru saja dibuat beserta password mereka.
+                                <span className="block font-bold mt-1 text-destructive">
+                                    PENTING: Segera simpan atau download daftar ini karena password tidak akan ditampilkan lagi demi keamanan.
+                                </span>
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <div className="flex-1 overflow-auto my-4 border rounded-md">
+                            <Table>
+                                <TableHeader className="sticky top-0 bg-background">
+                                    <TableRow>
+                                        <TableHead>Username</TableHead>
+                                        <TableHead>Password</TableHead>
+                                        <TableHead>Role</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {uploadResults?.map((res, i) => (
+                                        <TableRow key={i}>
+                                            <TableCell className="font-mono">{res.username}</TableCell>
+                                            <TableCell className="font-mono font-bold text-primary">{res.password}</TableCell>
+                                            <TableCell className="capitalize">{res.role}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
+
+                        <DialogFooter className="gap-2">
+                            <Button variant="outline" onClick={handleExportResults} className="gap-2">
+                                <Download className="w-4 h-4" />
+                                Download Hail (Excel)
+                            </Button>
+                            <Button onClick={() => setIsResultsOpen(false)}>
+                                Selesai
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
         </div>
     );
