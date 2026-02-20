@@ -84,3 +84,61 @@ export const useDeleteProfile = () => {
     },
   });
 };
+
+export const useChangePassword = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ username, newPassword }: { username: string; newPassword: string }) => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({ password: newPassword })
+        .eq('username', username)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error changing password:', error);
+        throw error;
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profiles'] });
+      toast.success('Password berhasil diperbarui');
+    },
+    onError: (error: Error) => {
+      console.error('Error changing password:', error);
+      toast.error(error.message || 'Gagal memperbarui password');
+    },
+  });
+};
+
+export const useBulkAddProfiles = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (profiles: (Omit<Profile, 'id' | 'created_at'> & { password: string })[]) => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .insert(profiles)
+        .select();
+
+      if (error) {
+        console.error('Error adding profiles:', error);
+        throw error;
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profiles'] });
+      toast.success('Daftar user berhasil diupload');
+    },
+    onError: (error: Error) => {
+      console.error('Error adding profiles:', error);
+      toast.error(error.message || 'Gagal mengupload daftar user');
+    },
+  });
+};

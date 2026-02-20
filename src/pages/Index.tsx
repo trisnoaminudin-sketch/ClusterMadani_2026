@@ -7,7 +7,13 @@ import { ResidentList } from "@/components/ResidentList";
 import { AdminMenu } from "@/components/AdminMenu";
 import { useResidents, useAddResident, Resident } from "@/hooks/useResidents";
 import { useIplSettings } from "@/hooks/useIpl";
-import { Users, UserCheck, UserX, Calendar, FileText, Banknote, CheckCircle, Loader2, LogOut, Download, CreditCard } from "lucide-react";
+import { Users, UserCheck, UserX, Calendar, FileText, Banknote, CheckCircle, Loader2, LogOut, Download, CreditCard, Key } from "lucide-react";
+import { useProfiles, useChangePassword } from "@/hooks/useProfiles";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useState } from "react";
+import { toast } from "sonner";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -19,6 +25,11 @@ const Index = () => {
   const { data: residents = [], isLoading, error } = useResidents(restrictedBlok, restrictedNomorRumah);
   const { data: iplSettings } = useIplSettings();
   const addResidentMutation = useAddResident();
+  const changePasswordMutation = useChangePassword();
+
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem("isAuthenticated");
@@ -31,6 +42,29 @@ const Index = () => {
 
   const handleAddResident = (resident: Omit<Resident, 'id'>) => {
     addResidentMutation.mutate(resident);
+  };
+
+  const handleChangePassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      toast.error("Password tidak cocok!");
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast.error("Password minimal 6 karakter!");
+      return;
+    }
+
+    changePasswordMutation.mutate({
+      username: adminName,
+      newPassword: newPassword
+    }, {
+      onSuccess: () => {
+        setIsPasswordDialogOpen(false);
+        setNewPassword("");
+        setConfirmPassword("");
+      }
+    });
   };
 
   const handleExportData = () => {
@@ -167,6 +201,51 @@ const Index = () => {
                 <LogOut className="w-4 h-4" />
                 <span className="text-xs font-semibold uppercase tracking-wider">Keluar</span>
               </Button>
+
+              <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2 h-9 rounded-full border-primary/20 hover:bg-primary/5 transition-all">
+                    <Key className="w-4 h-4 text-primary" />
+                    <span className="hidden sm:inline text-xs font-semibold uppercase tracking-wider">Ganti Pass</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Ganti Password</DialogTitle>
+                    <DialogDescription>
+                      Masukkan password baru Anda di bawah ini.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleChangePassword} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="new-password">Password Baru</Label>
+                      <Input
+                        id="new-password"
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="confirm-password">Konfirmasi Password</Label>
+                      <Input
+                        id="confirm-password"
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <DialogFooter>
+                      <Button type="submit" disabled={changePasswordMutation.isPending}>
+                        {changePasswordMutation.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                        Simpan Password
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
         </div>

@@ -6,20 +6,91 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useProfiles, useAddProfile, useDeleteProfile } from "@/hooks/useProfiles";
-import { Trash2, UserPlus, ArrowLeft, Loader2 } from "lucide-react";
+import { useProfiles, useAddProfile, useDeleteProfile, useBulkAddProfiles } from "@/hooks/useProfiles";
+import { Trash2, UserPlus, ArrowLeft, Loader2, Download, Upload } from "lucide-react";
+import * as XLSX from "xlsx";
+import { toast } from "sonner";
 
 const AdminUsers = () => {
     const navigate = useNavigate();
     const { data: profiles = [], isLoading } = useProfiles();
     const addProfileMutation = useAddProfile();
     const deleteProfileMutation = useDeleteProfile();
+    const bulkAddMutation = useBulkAddProfiles();
 
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [role, setRole] = useState<"admin" | "user">("user");
     const [restrictedBlok, setRestrictedBlok] = useState("");
     const [restrictedNomorRumah, setRestrictedNomorRumah] = useState("");
+    const [isUploading, setIsUploading] = useState(false);
+
+    const generatePassword = () => {
+        const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        let pass = "";
+        for (let i = 0; i < 8; i++) {
+            pass += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return pass;
+    };
+
+    const handleDownloadTemplate = () => {
+        const headers = [["username", "role", "blok", "no_rumah"]];
+        const data = [
+            ["admin_test", "admin", "", ""],
+            ["warga_A01", "user", "A", "01"]
+        ];
+        const ws = XLSX.utils.aoa_to_sheet([...headers, ...data]);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Template User");
+        XLSX.writeFile(wb, "Template_Upload_User.xlsx");
+    };
+
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsUploading(true);
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            try {
+                const bstr = evt.target?.result;
+                const wb = XLSX.read(bstr, { type: "binary" });
+                const wsname = wb.SheetNames[0];
+                const ws = wb.Sheets[wsname];
+
+                interface ExcelUser {
+                    username?: string;
+                    role?: string;
+                    blok?: string;
+                    no_rumah?: string;
+                }
+
+                const data = XLSX.utils.sheet_to_json<ExcelUser>(ws);
+
+                const newProfiles = data.map((item) => ({
+                    username: item.username || `user_${Math.random().toString(36).substr(2, 5)}`,
+                    password: generatePassword(),
+                    role: (item.role || "user") as "admin" | "user",
+                    restricted_blok: item.role === "user" ? (item.blok || null) : null,
+                    restricted_nomor_rumah: item.role === "user" ? (item.no_rumah || null) : null,
+                }));
+
+                bulkAddMutation.mutate(newProfiles, {
+                    onSuccess: () => {
+                        setIsUploading(false);
+                        e.target.value = ""; // clear input
+                    },
+                    onError: () => setIsUploading(false)
+                });
+            } catch (err) {
+                console.error(err);
+                toast.error("Gagal memproses file Excel");
+                setIsUploading(false);
+            }
+        };
+        reader.readAsBinaryString(file);
+    };
 
     const handleAddUser = (e: React.FormEvent) => {
         e.preventDefault();
@@ -60,6 +131,26 @@ const AdminUsers = () => {
                         <ArrowLeft className="w-4 h-4" />
                     </Button>
                     <h1 className="text-3xl font-bold">Kelola User</h1>
+                </div>
+
+                <div className="flex flex-wrap gap-4 mb-4">
+                    <Button variant="outline" onClick={handleDownloadTemplate} className="gap-2">
+                        <Download className="w-4 h-4" />
+                        Download Template
+                    </Button>
+                    <div className="relative">
+                        <input
+                            type="file"
+                            accept=".xlsx, .xls"
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            onChange={handleFileUpload}
+                            disabled={isUploading}
+                        />
+                        <Button variant="secondary" className="gap-2" disabled={isUploading}>
+                            {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                            Upload Data User (Excel)
+                        </Button>
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
