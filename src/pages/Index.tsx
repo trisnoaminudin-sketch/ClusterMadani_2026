@@ -26,7 +26,7 @@ const Index = () => {
 
   const { data: residents = [], isLoading, error } = useResidents(restrictedBlok, restrictedNomorRumah);
   const { data: iplSettings } = useIplSettings();
-  const { data: unpaidPeriods = [] } = useResidentUnpaidPeriods(residents[0]);
+  const { data: unpaidPeriods = [] } = useResidentUnpaidPeriods(residents.length > 0 ? residents[0] : undefined);
   const addResidentMutation = useAddResident();
   const bulkAddResidentMutation = useBulkAddResidents();
   const changePasswordMutation = useChangePassword();
@@ -227,14 +227,20 @@ const Index = () => {
 
     const calculateAge = (birthDate: string) => {
       if (!birthDate) return 0;
-      const today = new Date();
-      const birth = new Date(birthDate);
-      let age = today.getFullYear() - birth.getFullYear();
-      const monthDiff = today.getMonth() - birth.getMonth();
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-        age--;
+      try {
+        const today = new Date();
+        const birth = new Date(birthDate);
+        if (isNaN(birth.getTime())) return 0;
+
+        let age = today.getFullYear() - birth.getFullYear();
+        const monthDiff = today.getMonth() - birth.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+          age--;
+        }
+        return age;
+      } catch (e) {
+        return 0;
       }
-      return age;
     };
 
     const children = allMembers.filter((m) => calculateAge(m.tanggalLahir) < 18).length;
@@ -247,10 +253,11 @@ const Index = () => {
     const iplLunas = residents.filter((r) => r.statusIPL === "Lunas").length;
 
     // For resident view, totalDue is calculated from their unpaidPeriods
-    const totalDue = userRole === 'admin' ? 0 : unpaidPeriods.length * (parseInt(iplSettings?.value || "0"));
+    const monthlyIplVal = parseInt(iplSettings?.value || "0");
+    const totalDue = userRole === 'admin' ? 0 : (unpaidPeriods?.length || 0) * (isNaN(monthlyIplVal) ? 0 : monthlyIplVal);
 
     return { total, male, female, children, uniqueKK, totalIPL, iplLunas, totalDue };
-  }, [residents, unpaidPeriods, iplSettings]);
+  }, [residents, unpaidPeriods, iplSettings, userRole]);
 
   if (isLoading) {
     return (

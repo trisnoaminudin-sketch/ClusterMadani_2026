@@ -37,7 +37,7 @@ import { getNextPeriodsToPay } from "@/lib/ipl-utils";
 import { Resident } from "@/hooks/useResidents";
 import { AdminMenu } from "@/components/AdminMenu";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const AdminIpl = () => {
   const navigate = useNavigate();
@@ -54,10 +54,12 @@ const AdminIpl = () => {
   const resetMutation = useResetIplStatus();
   const deletePaymentMutation = useDeleteIplPayment();
 
-  // Initialize input when data loads
-  if (iplSettings?.value && !iplAmountInput && iplAmountInput !== "0") {
-    setIplAmountInput(iplSettings.value);
-  }
+  // Initialize input when data loads or settings change
+  useEffect(() => {
+    if (iplSettings?.value && !iplAmountInput) {
+      setIplAmountInput(iplSettings.value);
+    }
+  }, [iplSettings?.value]);
 
   const handleSaveSettings = () => {
     updateSettingsMutation.mutate(iplAmountInput);

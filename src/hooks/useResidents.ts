@@ -49,29 +49,39 @@ export interface Resident {
 }
 
 // Convert from database format to frontend format
-const fromDatabase = (row: Record<string, unknown>): Resident => ({
-  id: row.id as string,
-  nik: row.nik as string,
-  nomorKK: row.nomor_kk as string,
-  nama: row.nama as string,
-  noHpKepala: (row.no_hp_kepala as string) || '',
-  jumlahAnggota: (row.jumlah_anggota as number) || 0,
-  anggotaKeluarga: (row.anggota_keluarga as FamilyMember[]) || [],
-  jenisKelamin: row.jenis_kelamin as string,
-  tanggalLahir: row.tanggal_lahir as string,
-  alamat: (row.alamat as string) || '',
-  nomorRumah: (row.nomor_rumah as string) || '',
-  blokRumah: (row.blok_rumah as string) || '',
-  rt: (row.rt as string) || '',
-  rw: (row.rw as string) || '',
-  statusKepemilikanRumah: row.status_kepemilikan_rumah as string,
-  pekerjaan: row.pekerjaan as string,
-  statusPerkawinan: row.status_perkawinan as string,
-  nominalIPL: String(row.nominal_ipl || "0"),
-  statusIPL: String(row.status_ipl || "Belum Lunas"),
-  createdAt: row.created_at ? new Date(row.created_at as string) : new Date(),
-  tanggalPendaftaran: (row.created_at as string)?.split('T')[0] || new Date().toISOString().split('T')[0],
-});
+const fromDatabase = (row: Record<string, unknown>): Resident => {
+  const createdAtStr = row.created_at as string;
+  const createdAtDate = createdAtStr ? new Date(createdAtStr) : new Date();
+  const isValidDate = !isNaN(createdAtDate.getTime());
+
+  // Use today's date if created_at is missing or invalid
+  const finalCreatedAt = isValidDate ? createdAtDate : new Date();
+  const dateFallback = finalCreatedAt.toISOString().split('T')[0];
+
+  return {
+    id: row.id as string,
+    nik: row.nik as string,
+    nomorKK: row.nomor_kk as string,
+    nama: row.nama as string,
+    noHpKepala: (row.no_hp_kepala as string) || '',
+    jumlahAnggota: (row.jumlah_anggota as number) || 0,
+    anggotaKeluarga: (row.anggota_keluarga as FamilyMember[]) || [],
+    jenisKelamin: row.jenis_kelamin as string,
+    tanggalLahir: row.tanggal_lahir as string,
+    alamat: (row.alamat as string) || '',
+    nomorRumah: (row.nomor_rumah as string) || '',
+    blokRumah: (row.blok_rumah as string) || '',
+    rt: (row.rt as string) || '',
+    rw: (row.rw as string) || '',
+    statusKepemilikanRumah: row.status_kepemilikan_rumah as string,
+    pekerjaan: row.pekerjaan as string,
+    statusPerkawinan: row.status_perkawinan as string,
+    nominalIPL: String(row.nominal_ipl || "0"),
+    statusIPL: String(row.status_ipl || "Belum Lunas"),
+    createdAt: finalCreatedAt,
+    tanggalPendaftaran: dateFallback,
+  };
+};
 
 // Convert from frontend format to database format
 const toDatabase = (resident: Partial<Resident>): Record<string, unknown> => {

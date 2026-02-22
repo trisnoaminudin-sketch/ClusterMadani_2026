@@ -6,14 +6,24 @@ import { differenceInMonths, startOfMonth, format, parse, isValid, parseISO } fr
  * @param paidPeriods List of periods already paid
  */
 export const calculateUnpaidPeriods = (registrationDate: string, paidPeriods: string[]): string[] => {
+    if (!registrationDate) return [];
+
     const now = new Date();
-    const startMonth = startOfMonth(parseISO(registrationDate));
+    const parsedDate = parseISO(registrationDate);
+    if (!isValid(parsedDate)) {
+        console.error("Invalid registration date:", registrationDate);
+        return [];
+    }
+
+    const startMonth = startOfMonth(parsedDate);
     const currentMonth = startOfMonth(now);
 
     const unpaidPeriods: string[] = [];
 
     let iterDate = startMonth;
-    while (iterDate <= currentMonth) {
+    // Safety break: max 20 years
+    let safetyCounter = 0;
+    while (iterDate <= currentMonth && safetyCounter < 240) {
         const periodStr = format(iterDate, "yyyy-MM");
         if (!paidPeriods.includes(periodStr)) {
             unpaidPeriods.push(periodStr);
@@ -21,6 +31,7 @@ export const calculateUnpaidPeriods = (registrationDate: string, paidPeriods: st
 
         // Increment by 1 month
         iterDate = new Date(iterDate.getFullYear(), iterDate.getMonth() + 1, 1);
+        safetyCounter++;
     }
 
     return unpaidPeriods;
