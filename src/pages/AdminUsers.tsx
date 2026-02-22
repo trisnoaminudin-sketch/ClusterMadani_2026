@@ -3,14 +3,30 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+    Plus,
+    Trash2,
+    Search,
+    ArrowLeft,
+    Settings,
+    Shield,
+    Database,
+    Download,
+    Upload,
+    UserPlus,
+    Loader2,
+    Eye,
+    EyeOff,
+    Save
+} from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useProfiles, useAddProfile, useDeleteProfile, useBulkAddProfiles } from "@/hooks/useProfiles";
-import { Trash2, UserPlus, ArrowLeft, Loader2, Download, Upload, Eye, EyeOff, Save } from "lucide-react";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AdminMenu } from "@/components/AdminMenu";
 
 const AdminUsers = () => {
     const navigate = useNavigate();
@@ -138,16 +154,27 @@ const AdminUsers = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 p-4 md:p-8">
-            <div className="container mx-auto space-y-8">
-                <div className="flex items-center gap-4">
-                    <Button variant="outline" size="icon" onClick={() => navigate("/")}>
-                        <ArrowLeft className="w-4 h-4" />
-                    </Button>
-                    <h1 className="text-3xl font-bold">Kelola User</h1>
+        <div className="min-h-screen bg-gray-50/50 pb-12">
+            <div className="container mx-auto px-4 pt-24">
+                <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+                    <div className="flex items-center gap-4">
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => navigate("/")}
+                            title="Kembali ke Dashboard"
+                        >
+                            <ArrowLeft className="h-4 w-4" />
+                        </Button>
+                        <div>
+                            <h1 className="text-3xl font-bold tracking-tight">Kelola User</h1>
+                            <p className="text-muted-foreground">Manajemen akses dan akun warga</p>
+                        </div>
+                    </div>
+                    <AdminMenu />
                 </div>
 
-                <div className="flex flex-wrap gap-4 mb-4">
+                <div className="flex flex-wrap gap-4 mb-8">
                     <Button variant="outline" onClick={handleDownloadTemplate} className="gap-2">
                         <Download className="w-4 h-4" />
                         Download Template
@@ -298,7 +325,7 @@ const AdminUsers = () => {
                     <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
                         <DialogHeader>
                             <DialogTitle className="flex items-center gap-2">
-                                <Save className="w-5 h-5 text-success" />
+                                <Save className="w-5 h-5 text-green-600" />
                                 Hasil Upload & Password
                             </DialogTitle>
                             <DialogDescription>
@@ -333,7 +360,7 @@ const AdminUsers = () => {
                         <DialogFooter className="gap-2">
                             <Button variant="outline" onClick={handleExportResults} className="gap-2">
                                 <Download className="w-4 h-4" />
-                                Download Hail (Excel)
+                                Download Hasil (Excel)
                             </Button>
                             <Button onClick={() => setIsResultsOpen(false)}>
                                 Selesai

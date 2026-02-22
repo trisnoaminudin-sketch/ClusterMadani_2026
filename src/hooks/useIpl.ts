@@ -172,3 +172,28 @@ export const useResidentPaidPeriods = (residentId: string | undefined) => {
     }
   });
 };
+
+export const useDeleteIplPayment = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (paymentId: string) => {
+      const { error } = await supabase
+        .from('ipl_payments')
+        .delete()
+        .eq('id', paymentId);
+
+      if (error) throw error;
+      return paymentId;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ipl_payments'] });
+      queryClient.invalidateQueries({ queryKey: ['residents'] });
+      toast.success('Transaksi IPL berhasil dihapus');
+    },
+    onError: (error) => {
+      console.error("Error deleting payment:", error);
+      toast.error('Gagal menghapus transaksi');
+    }
+  });
+};

@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useNavigate, Link } from "react-router-dom";
 import { format, parseISO } from "date-fns";
 import { id } from "date-fns/locale";
+import { ArrowLeft, Trash2 } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -31,13 +31,16 @@ import {
   useIplPayments,
   useResidentUnpaidPeriods,
   useResidentPaidPeriods,
+  useDeleteIplPayment,
 } from "@/hooks/useIpl";
 import { getNextPeriodsToPay } from "@/lib/ipl-utils";
 import { Resident } from "@/hooks/useResidents";
 import { AdminMenu } from "@/components/AdminMenu";
 import { toast } from "sonner";
+import { useState } from "react";
 
 const AdminIpl = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [iplAmountInput, setIplAmountInput] = useState("");
 
@@ -49,6 +52,7 @@ const AdminIpl = () => {
   const updateSettingsMutation = useUpdateIplSettings();
   const payMutation = usePayIpl();
   const resetMutation = useResetIplStatus();
+  const deletePaymentMutation = useDeleteIplPayment();
 
   // Initialize input when data loads
   if (iplSettings?.value && !iplAmountInput && iplAmountInput !== "0") {
@@ -79,6 +83,12 @@ const AdminIpl = () => {
     }
   };
 
+  const handleDeletePayment = (paymentId: string) => {
+    if (confirm("Apakah Anda yakin ingin menghapus transaksi ini?")) {
+      deletePaymentMutation.mutate(paymentId);
+    }
+  };
+
   const filteredResidents = residents?.filter((resident) =>
     resident.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
     resident.blokRumah.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -86,203 +96,224 @@ const AdminIpl = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50/50 p-6 md:p-8 space-y-8">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Manajemen IPL</h1>
-          <p className="text-muted-foreground mt-2">
-            Kelola pembayaran dan pengaturan Iuran Pemeliharaan Lingkungan
-          </p>
+    <div className="min-h-screen bg-gray-50/50 pb-12">
+      <div className="container mx-auto px-4 pt-24">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => navigate("/")}
+              title="Kembali ke Dashboard"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Manajemen IPL</h1>
+              <p className="text-muted-foreground">Kelola tagihan dan pembayaran IPL warga</p>
+            </div>
+          </div>
+          <AdminMenu />
         </div>
-        <AdminMenu />
-      </div>
 
-      <Tabs defaultValue="payment" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="payment" className="gap-2">
-            <CheckCircle className="w-4 h-4" />
-            Pembayaran
-          </TabsTrigger>
-          <TabsTrigger value="report" className="gap-2">
-            <FileText className="w-4 h-4" />
-            Laporan Database
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="gap-2">
-            <Search className="w-4 h-4" />
-            Pengaturan
-          </TabsTrigger>
-        </TabsList>
+        <Tabs defaultValue="payment" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="payment" className="gap-2">
+              <CheckCircle className="w-4 h-4" />
+              Pembayaran
+            </TabsTrigger>
+            <TabsTrigger value="report" className="gap-2">
+              <FileText className="w-4 h-4" />
+              Laporan Database
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="gap-2">
+              <Search className="w-4 h-4" />
+              Pengaturan
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Tab Pembayaran */}
-        <TabsContent value="payment">
-          <Card>
-            <CardHeader>
-              <CardTitle>Status Pembayaran Warga</CardTitle>
-              <CardDescription>
-                Update status pembayaran IPL warga untuk periode ini.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-4 mb-6">
-                <div className="relative flex-1 max-w-sm">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Cari warga..."
-                    className="pl-8"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
+          {/* Tab Pembayaran */}
+          <TabsContent value="payment">
+            <Card>
+              <CardHeader>
+                <CardTitle>Status Pembayaran Warga</CardTitle>
+                <CardDescription>
+                  Update status pembayaran IPL warga untuk periode ini.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="relative flex-1 max-w-sm">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Cari warga..."
+                      className="pl-8"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Nama</TableHead>
-                      <TableHead>Blok / No</TableHead>
-                      <TableHead>Status IPL</TableHead>
-                      <TableHead>IPL Terhutang</TableHead>
-                      <TableHead>Nominal Bayar</TableHead>
-                      <TableHead className="text-right">Aksi</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {isLoadingResidents ? (
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
                       <TableRow>
-                        <TableCell colSpan={4} className="text-center py-8">
-                          Loading...
-                        </TableCell>
+                        <TableHead>Nama</TableHead>
+                        <TableHead>Blok / No</TableHead>
+                        <TableHead>Status IPL</TableHead>
+                        <TableHead>IPL Terhutang</TableHead>
+                        <TableHead>Nominal Bayar</TableHead>
+                        <TableHead className="text-right">Aksi</TableHead>
                       </TableRow>
-                    ) : filteredResidents?.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={4} className="text-center py-8">
-                          Tidak ada data warga ditemukan
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filteredResidents?.map((resident) => (
-                        <ResidentRow
-                          key={resident.id}
-                          resident={resident}
-                          iplSettings={iplSettings}
-                          handleReset={handleReset}
-                          handlePay={handlePay}
-                        />
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Tab Laporan */}
-        <TabsContent value="report">
-          <Card>
-            <CardHeader>
-              <CardTitle>Laporan Transaksi IPL</CardTitle>
-              <CardDescription>
-                Riwayat pembayaran IPL yang tercatat dalam sistem database.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Tanggal Bayar</TableHead>
-                      <TableHead>Nama Warga</TableHead>
-                      <TableHead>Periode</TableHead>
-                      <TableHead>Jumlah</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {isLoadingHistory ? (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center py-8">
-                          Loading...
-                        </TableCell>
-                      </TableRow>
-                    ) : paymentHistory?.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center py-8">
-                          Belum ada data transaksi
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      paymentHistory?.map((payment: {
-                        id: string;
-                        payment_date: string;
-                        residents: { nama: string; blok_rumah: string; nomor_rumah: string } | null;
-                        period: string;
-                        amount: string;
-                        status: string
-                      }) => (
-                        <TableRow key={payment.id}>
-                          <TableCell>
-                            {format(new Date(payment.payment_date), "dd MMM yyyy HH:mm", {
-                              locale: id,
-                            })}
-                          </TableCell>
-                          <TableCell>
-                            {payment.residents?.nama} ({payment.residents?.blok_rumah}/{payment.residents?.nomor_rumah})
-                          </TableCell>
-                          <TableCell>{payment.period}</TableCell>
-                          <TableCell>
-                            Rp {parseInt(payment.amount).toLocaleString("id-ID")}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="text-green-600 border-green-600">
-                              {payment.status}
-                            </Badge>
+                    </TableHeader>
+                    <TableBody>
+                      {isLoadingResidents ? (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center py-8">
+                            Loading...
                           </TableCell>
                         </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Tab Pengaturan */}
-        <TabsContent value="settings">
-          <Card>
-            <CardHeader>
-              <CardTitle>Pengaturan Harga IPL</CardTitle>
-              <CardDescription>
-                Tentukan nilai nominal IPL yang berlaku untuk seluruh warga.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="max-w-md space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Nominal IPL (Rp)</label>
-                  <Input
-                    type="number"
-                    placeholder="Contoh: 50000"
-                    value={iplAmountInput}
-                    onChange={(e) => setIplAmountInput(e.target.value)}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Nilai ini akan muncul di dashboard semua warga.
-                  </p>
+                      ) : filteredResidents?.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center py-8">
+                            Tidak ada data warga ditemukan
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredResidents?.map((resident) => (
+                          <ResidentRow
+                            key={resident.id}
+                            resident={resident}
+                            iplSettings={iplSettings}
+                            handleReset={handleReset}
+                            handlePay={handlePay}
+                          />
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
                 </div>
-                <Button
-                  onClick={handleSaveSettings}
-                  disabled={updateSettingsMutation.isPending}
-                >
-                  {updateSettingsMutation.isPending ? "Menyimpan..." : "Simpan Perubahan"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Tab Laporan */}
+          <TabsContent value="report">
+            <Card>
+              <CardHeader>
+                <CardTitle>Laporan Transaksi IPL</CardTitle>
+                <CardDescription>
+                  Riwayat pembayaran IPL yang tercatat dalam sistem database.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Tanggal Bayar</TableHead>
+                        <TableHead>Nama Warga</TableHead>
+                        <TableHead>Periode</TableHead>
+                        <TableHead>Jumlah</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Aksi</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {isLoadingHistory ? (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-8">
+                            Loading...
+                          </TableCell>
+                        </TableRow>
+                      ) : paymentHistory?.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-8">
+                            Belum ada data transaksi
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        paymentHistory?.map((payment: {
+                          id: string;
+                          payment_date: string;
+                          residents: { nama: string; blok_rumah: string; nomor_rumah: string } | null;
+                          period: string;
+                          amount: string;
+                          status: string
+                        }) => (
+                          <TableRow key={payment.id}>
+                            <TableCell>
+                              {format(new Date(payment.payment_date), "dd MMM yyyy HH:mm", {
+                                locale: id,
+                              })}
+                            </TableCell>
+                            <TableCell>
+                              {payment.residents?.nama} ({payment.residents?.blok_rumah}/{payment.residents?.nomor_rumah})
+                            </TableCell>
+                            <TableCell>{payment.period}</TableCell>
+                            <TableCell>
+                              Rp {parseInt(payment.amount).toLocaleString("id-ID")}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="text-green-600 border-green-600">
+                                {payment.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => handleDeletePayment(payment.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Tab Pengaturan */}
+          <TabsContent value="settings">
+            <Card>
+              <CardHeader>
+                <CardTitle>Pengaturan Harga IPL</CardTitle>
+                <CardDescription>
+                  Tentukan nilai nominal IPL yang berlaku untuk seluruh warga.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="max-w-md space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Nominal IPL (Rp)</label>
+                    <Input
+                      type="number"
+                      placeholder="Contoh: 50000"
+                      value={iplAmountInput}
+                      onChange={(e) => setIplAmountInput(e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Nilai ini akan muncul di dashboard semua warga.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={handleSaveSettings}
+                    disabled={updateSettingsMutation.isPending}
+                  >
+                    {updateSettingsMutation.isPending ? "Menyimpan..." : "Simpan Perubahan"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 };
