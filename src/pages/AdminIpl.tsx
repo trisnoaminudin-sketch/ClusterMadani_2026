@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { id } from "date-fns/locale";
 import {
   Card,
@@ -306,7 +306,7 @@ const ResidentRow = ({
   const periodsToCover = getNextPeriodsToPay(
     parseInt(payAmount || "0"),
     monthlyAmount,
-    resident.createdAt,
+    resident.tanggalPendaftaran,
     paidPeriods
   );
 
@@ -333,7 +333,7 @@ const ResidentRow = ({
     <TableRow>
       <TableCell className="font-medium">
         <div>{resident.nama}</div>
-        <div className="text-xs text-muted-foreground">Mendaftar: {format(resident.createdAt, "dd MMM yyyy")}</div>
+        <div className="text-xs text-muted-foreground">Mendaftar: {format(parseISO(resident.tanggalPendaftaran), "dd MMM yyyy")}</div>
       </TableCell>
       <TableCell>
         {resident.blokRumah} / {resident.nomorRumah}

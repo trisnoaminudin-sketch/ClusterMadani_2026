@@ -6,6 +6,7 @@ import { AddResidentForm } from "@/components/AddResidentForm";
 import { ResidentList } from "@/components/ResidentList";
 import { AdminMenu } from "@/components/AdminMenu";
 import { Users, UserCheck, UserX, Calendar, FileText, Banknote, CheckCircle, Loader2, LogOut, Download, CreditCard, Key, Upload } from "lucide-react";
+import { format, parseISO } from "date-fns";
 import { useResidents, useAddResident, Resident, useBulkAddResidents } from "@/hooks/useResidents";
 import { useIplSettings, useResidentUnpaidPeriods } from "@/hooks/useIpl";
 import * as XLSX from "xlsx";
@@ -146,7 +147,8 @@ const Index = () => {
           statusPerkawinan: String(item.status_perkawinan || ""),
           nominalIPL: String(item.nominal_ipl || ""),
           statusIPL: String(item.status_ipl || "Belum Lunas"),
-          createdAt: new Date()
+          createdAt: new Date(),
+          tanggalPendaftaran: new Date().toISOString().split('T')[0]
         }));
 
         bulkAddResidentMutation.mutate(newResidents, {
@@ -244,8 +246,10 @@ const Index = () => {
     const totalIPL = residents.reduce((sum, r) => sum + (Number(r.nominalIPL) || 0), 0);
     const iplLunas = residents.filter((r) => r.statusIPL === "Lunas").length;
 
-    return { total, male, female, children, uniqueKK, totalIPL, iplLunas };
-  }, [residents]);
+    const totalDue = unpaidPeriods.length * (parseInt(iplSettings?.value || "0"));
+
+    return { total, male, female, children, uniqueKK, totalIPL, iplLunas, totalDue };
+  }, [residents, unpaidPeriods, iplSettings]);
 
   if (isLoading) {
     return (
@@ -420,8 +424,12 @@ const Index = () => {
             title="Status IPL"
             value={userRole === 'admin' ? `${stats.iplLunas} Warga` : (unpaidPeriods.length === 0 ? "Lunas" : "Belum Lunas")}
             icon={CheckCircle}
-            description={userRole === 'admin' ? "Sudah membayar bulan ini" : (unpaidPeriods.length > 0 ? `${unpaidPeriods.length} bulan tertunggak` : "Semua tagihan lunas")}
-            variant={userRole !== 'admin' && unpaidPeriods.length > 0 ? "destructive" : "success"}
+            description={userRole === 'admin'
+              ? "Sudah membayar bulan ini"
+              : unpaidPeriods.length === 0
+                ? "Sistem IPL sudah lunas"
+                : `${unpaidPeriods.length} bulan belum lunas (Rp ${stats.totalDue.toLocaleString('id-ID')})`}
+            variant={unpaidPeriods.length > 0 && userRole !== 'admin' ? "destructive" : "success"}
           />
         </div>
 

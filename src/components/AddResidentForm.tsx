@@ -30,6 +30,7 @@ export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormPro
     rw: "",
     nominalIPL: "",
     statusIPL: "",
+    tanggalPendaftaran: new Date().toISOString().split('T')[0],
   });
 
   const [jumlahAnggota, setJumlahAnggota] = useState("0");
@@ -71,6 +72,7 @@ export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormPro
       statusPerkawinan: headOfHousehold.statusPerkawinan || "",
       jumlahAnggota: parseInt(jumlahAnggota, 10),
       anggotaKeluarga: anggotaKeluarga,
+      createdAt: new Date(),
     });
 
     setFormData({
@@ -83,6 +85,7 @@ export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormPro
       rw: "",
       nominalIPL: "",
       statusIPL: "",
+      tanggalPendaftaran: new Date().toISOString().split('T')[0],
     });
     setJumlahAnggota("0");
     setAnggotaKeluarga([]);
@@ -231,6 +234,16 @@ export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormPro
                     <SelectItem value="Belum Lunas">Belum Lunas</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="tanggalPendaftaran">Tanggal Pendaftaran</Label>
+                <Input
+                  id="tanggalPendaftaran"
+                  type="date"
+                  value={formData.tanggalPendaftaran}
+                  onChange={(e) => setFormData({ ...formData, tanggalPendaftaran: e.target.value })}
+                />
               </div>
             </>
           )}

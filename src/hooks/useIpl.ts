@@ -134,7 +134,7 @@ export const useIplPayments = () => {
 
 export const useResidentUnpaidPeriods = (resident: Resident | undefined) => {
   return useQuery({
-    queryKey: ['unpaid_periods', resident?.id],
+    queryKey: ['ipl_payments', 'unpaid', resident?.id],
     enabled: !!resident,
     queryFn: async () => {
       if (!resident) return [];
@@ -149,14 +149,14 @@ export const useResidentUnpaidPeriods = (resident: Resident | undefined) => {
       if (error) throw error;
 
       const paidPeriods = data.map(p => p.period);
-      return calculateUnpaidPeriods(resident.createdAt, paidPeriods);
+      return calculateUnpaidPeriods(resident.tanggalPendaftaran, paidPeriods);
     }
   });
 };
 
 export const useResidentPaidPeriods = (residentId: string | undefined) => {
   return useQuery({
-    queryKey: ['paid_periods', residentId],
+    queryKey: ['ipl_payments', 'paid', residentId],
     enabled: !!residentId,
     queryFn: async () => {
       if (!residentId) return [];

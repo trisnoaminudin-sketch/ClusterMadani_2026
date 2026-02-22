@@ -45,6 +45,7 @@ export interface Resident {
   nominalIPL: string;
   statusIPL: string;
   createdAt: Date;
+  tanggalPendaftaran: string;
 }
 
 // Convert from database format to frontend format
@@ -69,6 +70,7 @@ const fromDatabase = (row: Record<string, unknown>): Resident => ({
   nominalIPL: row.nominal_ipl as string,
   statusIPL: row.status_ipl as string,
   createdAt: row.created_at ? new Date(row.created_at as string) : new Date(),
+  tanggalPendaftaran: (row.tanggal_pendaftaran as string) || (row.created_at as string)?.split('T')[0] || new Date().toISOString().split('T')[0],
 });
 
 // Convert from frontend format to database format
@@ -91,6 +93,7 @@ const toDatabase = (resident: Partial<Resident>): Record<string, unknown> => ({
   status_perkawinan: resident.statusPerkawinan,
   nominal_ipl: resident.nominalIPL,
   status_ipl: resident.statusIPL,
+  tanggal_pendaftaran: resident.tanggalPendaftaran,
 });
 
 export const useResidents = (blok?: string | null, nomorRumah?: string | null) => {

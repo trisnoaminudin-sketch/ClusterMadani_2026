@@ -194,6 +194,16 @@ export const EditResidentDialog = ({ resident, open, onOpenChange, onSave, isLoa
                     </SelectContent>
                   </Select>
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-tanggalPendaftaran">Tanggal Pendaftaran</Label>
+                  <Input
+                    id="edit-tanggalPendaftaran"
+                    type="date"
+                    value={formData.tanggalPendaftaran}
+                    onChange={(e) => setFormData({ ...formData, tanggalPendaftaran: e.target.value })}
+                  />
+                </div>
               </>
             )}
           </div>

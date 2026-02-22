@@ -1,14 +1,13 @@
-import { differenceInMonths, startOfMonth, format, parse, isValid } from "date-fns";
+import { differenceInMonths, startOfMonth, format, parse, isValid, parseISO } from "date-fns";
 
 /**
- * Calculates the total months between startDate and now that haven't been paid.
- * @param createdAt The date the resident was created (start of obligation)
- * @param paidPeriods Array of periods already paid in 'yyyy-MM' format
- * @returns Array of unpaid periods in 'yyyy-MM' format
+ * Calculates unpaid periods (yyyy-MM) from registration date to now.
+ * @param registrationDate ISO date string (YYYY-MM-DD)
+ * @param paidPeriods List of periods already paid
  */
-export const calculateUnpaidPeriods = (createdAt: Date, paidPeriods: string[]): string[] => {
+export const calculateUnpaidPeriods = (registrationDate: string, paidPeriods: string[]): string[] => {
     const now = new Date();
-    const startMonth = startOfMonth(createdAt);
+    const startMonth = startOfMonth(parseISO(registrationDate));
     const currentMonth = startOfMonth(now);
 
     const unpaidPeriods: string[] = [];
@@ -34,12 +33,12 @@ export const calculateUnpaidPeriods = (createdAt: Date, paidPeriods: string[]): 
 export const getNextPeriodsToPay = (
     amount: number,
     monthlyAmount: number,
-    createdAt: Date,
+    registrationDate: string,
     paidPeriods: string[]
 ): string[] => {
     if (monthlyAmount <= 0 || amount < monthlyAmount) return [];
 
-    const startMonth = startOfMonth(createdAt);
+    const startMonth = startOfMonth(parseISO(registrationDate));
     const periodsToPay: string[] = [];
     let remainingAmount = amount;
 
