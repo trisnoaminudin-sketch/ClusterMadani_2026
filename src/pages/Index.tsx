@@ -246,7 +246,8 @@ const Index = () => {
     const totalIPL = residents.reduce((sum, r) => sum + (Number(r.nominalIPL) || 0), 0);
     const iplLunas = residents.filter((r) => r.statusIPL === "Lunas").length;
 
-    const totalDue = unpaidPeriods.length * (parseInt(iplSettings?.value || "0"));
+    // For resident view, totalDue is calculated from their unpaidPeriods
+    const totalDue = userRole === 'admin' ? 0 : unpaidPeriods.length * (parseInt(iplSettings?.value || "0"));
 
     return { total, male, female, children, uniqueKK, totalIPL, iplLunas, totalDue };
   }, [residents, unpaidPeriods, iplSettings]);

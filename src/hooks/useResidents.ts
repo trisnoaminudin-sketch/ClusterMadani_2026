@@ -67,8 +67,8 @@ const fromDatabase = (row: Record<string, unknown>): Resident => ({
   statusKepemilikanRumah: row.status_kepemilikan_rumah as string,
   pekerjaan: row.pekerjaan as string,
   statusPerkawinan: row.status_perkawinan as string,
-  nominalIPL: row.nominal_ipl as string,
-  statusIPL: row.status_ipl as string,
+  nominalIPL: String(row.nominal_ipl || "0"),
+  statusIPL: String(row.status_ipl || "Belum Lunas"),
   createdAt: row.created_at ? new Date(row.created_at as string) : new Date(),
   tanggalPendaftaran: (row.tanggal_pendaftaran as string) || (row.created_at as string)?.split('T')[0] || new Date().toISOString().split('T')[0],
 });

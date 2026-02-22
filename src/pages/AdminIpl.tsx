@@ -59,14 +59,17 @@ const AdminIpl = () => {
     updateSettingsMutation.mutate(iplAmountInput);
   };
 
-  const handlePay = (resident: Resident, unpaidPeriods: string[]) => {
-    const monthlyAmount = parseInt(iplSettings?.value || "0");
-    const totalAmount = monthlyAmount * unpaidPeriods.length;
+  const handlePay = (resident: Resident, periods: string[]) => {
+    const residentIpl = parseInt(resident.nominalIPL) > 0
+      ? parseInt(resident.nominalIPL)
+      : parseInt(iplSettings?.value || "0");
+
+    const totalAmount = residentIpl * periods.length;
 
     payMutation.mutate({
       residentId: resident.id,
       amount: totalAmount,
-      periods: unpaidPeriods
+      periods: periods
     });
   };
 
@@ -299,7 +302,10 @@ const ResidentRow = ({
   const { data: paidPeriods = [] } = useResidentPaidPeriods(resident.id);
   const [payAmount, setPayAmount] = useState<string>("");
 
-  const monthlyAmount = parseInt(iplSettings?.value || "0");
+  const monthlyAmount = parseInt(resident.nominalIPL) > 0
+    ? parseInt(resident.nominalIPL)
+    : parseInt(iplSettings?.value || "0");
+
   const totalDebt = monthlyAmount * unpaidPeriods.length;
 
   // Calculate periods covered by the input amount

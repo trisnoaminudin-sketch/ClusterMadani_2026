@@ -67,9 +67,10 @@ export const usePayIpl = () => {
       if (paymentError) throw paymentError;
 
       // 2. Update residents table status
+      // We set it to 'Lunas' as a hint, but the real logic depends on ipl_payments
       const { error: residentError } = await supabase
         .from('residents')
-        .update({ status_ipl: 'Lunas' })
+        .update({ status_ipl: (periods.length > 0 ? 'Lunas' : 'Belum Lunas') })
         .eq('id', residentId);
 
       if (residentError) throw residentError;

@@ -177,7 +177,7 @@ export const EditResidentDialog = ({ resident, open, onOpenChange, onSave, isLoa
                   <Input
                     id="edit-nominalIPL"
                     type="number"
-                    value={formData.nominalIPL}
+                    value={formData.nominalIPL || "0"}
                     onChange={(e) => setFormData({ ...formData, nominalIPL: e.target.value })}
                   />
                 </div>
