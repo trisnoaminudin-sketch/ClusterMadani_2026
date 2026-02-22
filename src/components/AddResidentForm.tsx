@@ -26,8 +26,8 @@ export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormPro
     nomorRumah: userRole === 'admin' ? "" : (restrictedNomorRumah || ""),
     blokRumah: userRole === 'admin' ? "" : (restrictedBlok || ""),
     statusKepemilikanRumah: "",
-    rt: "",
-    rw: "",
+    rt: "012",
+    rw: "006",
     nominalIPL: "",
     statusIPL: "",
     tanggalPendaftaran: new Date().toISOString().split('T')[0],
@@ -81,8 +81,8 @@ export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormPro
       nomorRumah: userRole === 'admin' ? "" : (restrictedNomorRumah || ""),
       blokRumah: userRole === 'admin' ? "" : (restrictedBlok || ""),
       statusKepemilikanRumah: "",
-      rt: "",
-      rw: "",
+      rt: "012",
+      rw: "006",
       nominalIPL: "",
       statusIPL: "",
       tanggalPendaftaran: new Date().toISOString().split('T')[0],
@@ -192,6 +192,8 @@ export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormPro
               id="rt"
               type="text"
               placeholder="001"
+              readOnly
+              className="bg-muted cursor-not-allowed"
               value={formData.rt}
               onChange={(e) => setFormData({ ...formData, rt: e.target.value })}
             />
@@ -203,6 +205,8 @@ export const AddResidentForm = ({ onAddResident, isLoading }: AddResidentFormPro
               id="rw"
               type="text"
               placeholder="001"
+              readOnly
+              className="bg-muted cursor-not-allowed"
               value={formData.rw}
               onChange={(e) => setFormData({ ...formData, rw: e.target.value })}
             />

@@ -153,6 +153,8 @@ export const EditResidentDialog = ({ resident, open, onOpenChange, onSave, isLoa
               <Input
                 id="edit-rt"
                 type="text"
+                readOnly
+                className="bg-muted cursor-not-allowed"
                 value={formData.rt}
                 onChange={(e) => setFormData({ ...formData, rt: e.target.value })}
               />
@@ -163,6 +165,8 @@ export const EditResidentDialog = ({ resident, open, onOpenChange, onSave, isLoa
               <Input
                 id="edit-rw"
                 type="text"
+                readOnly
+                className="bg-muted cursor-not-allowed"
                 value={formData.rw}
                 onChange={(e) => setFormData({ ...formData, rw: e.target.value })}
               />
