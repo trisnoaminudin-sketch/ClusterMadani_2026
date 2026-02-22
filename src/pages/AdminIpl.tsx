@@ -250,7 +250,13 @@ const AdminIpl = () => {
                               })}
                             </TableCell>
                             <TableCell>
-                              {payment.residents?.nama} ({payment.residents?.blok_rumah}/{payment.residents?.nomor_rumah})
+                              {payment.residents?.nama}
+                              {(payment.residents?.blok_rumah || payment.residents?.nomor_rumah) && (
+                                <>
+                                  {" "}
+                                  ({payment.residents?.blok_rumah || "-"}/{payment.residents?.nomor_rumah || "-"})
+                                </>
+                              )}
                             </TableCell>
                             <TableCell>{payment.period}</TableCell>
                             <TableCell>
