@@ -74,27 +74,34 @@ const fromDatabase = (row: Record<string, unknown>): Resident => ({
 });
 
 // Convert from frontend format to database format
-const toDatabase = (resident: Partial<Resident>): Record<string, unknown> => ({
-  nik: resident.nik,
-  nomor_kk: resident.nomorKK,
-  nama: resident.nama,
-  no_hp_kepala: resident.noHpKepala,
-  jumlah_anggota: resident.jumlahAnggota,
-  anggota_keluarga: resident.anggotaKeluarga,
-  jenis_kelamin: resident.jenisKelamin,
-  tanggal_lahir: resident.tanggalLahir,
-  alamat: resident.alamat,
-  nomor_rumah: resident.nomorRumah,
-  blok_rumah: resident.blokRumah,
-  rt: resident.rt,
-  rw: resident.rw,
-  status_kepemilikan_rumah: resident.statusKepemilikanRumah,
-  pekerjaan: resident.pekerjaan,
-  status_perkawinan: resident.statusPerkawinan,
-  nominal_ipl: resident.nominalIPL,
-  status_ipl: resident.statusIPL,
-  tanggal_pendaftaran: resident.tanggalPendaftaran,
-});
+const toDatabase = (resident: Partial<Resident>): Record<string, unknown> => {
+  const data: Record<string, unknown> = {
+    nik: resident.nik,
+    nomor_kk: resident.nomorKK,
+    nama: resident.nama,
+    no_hp_kepala: resident.noHpKepala,
+    jumlah_anggota: resident.jumlahAnggota,
+    anggota_keluarga: resident.anggotaKeluarga,
+    jenis_kelamin: resident.jenisKelamin,
+    tanggal_lahir: resident.tanggalLahir,
+    alamat: resident.alamat,
+    nomor_rumah: resident.nomorRumah,
+    blok_rumah: resident.blokRumah,
+    rt: resident.rt,
+    rw: resident.rw,
+    status_kepemilikan_rumah: resident.statusKepemilikanRumah,
+    pekerjaan: resident.pekerjaan,
+    status_perkawinan: resident.statusPerkawinan,
+    nominal_ipl: resident.nominalIPL ? parseInt(resident.nominalIPL, 10) : 0,
+    status_ipl: resident.statusIPL || "Belum Lunas",
+  };
+
+  if (resident.tanggalPendaftaran) {
+    data.tanggal_pendaftaran = resident.tanggalPendaftaran;
+  }
+
+  return data;
+};
 
 export const useResidents = (blok?: string | null, nomorRumah?: string | null) => {
   return useQuery({
