@@ -70,7 +70,7 @@ const fromDatabase = (row: Record<string, unknown>): Resident => ({
   nominalIPL: String(row.nominal_ipl || "0"),
   statusIPL: String(row.status_ipl || "Belum Lunas"),
   createdAt: row.created_at ? new Date(row.created_at as string) : new Date(),
-  tanggalPendaftaran: (row.tanggal_pendaftaran as string) || (row.created_at as string)?.split('T')[0] || new Date().toISOString().split('T')[0],
+  tanggalPendaftaran: (row.created_at as string)?.split('T')[0] || new Date().toISOString().split('T')[0],
 });
 
 // Convert from frontend format to database format
@@ -95,10 +95,6 @@ const toDatabase = (resident: Partial<Resident>): Record<string, unknown> => {
     nominal_ipl: resident.nominalIPL ? parseInt(resident.nominalIPL, 10) : 0,
     status_ipl: resident.statusIPL || "Belum Lunas",
   };
-
-  if (resident.tanggalPendaftaran) {
-    data.tanggal_pendaftaran = resident.tanggalPendaftaran;
-  }
 
   return data;
 };
