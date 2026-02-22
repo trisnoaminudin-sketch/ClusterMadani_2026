@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { calculateUnpaidPeriods, getNextPeriodsToPay } from '@/lib/ipl-utils';
+import { Resident } from './useResidents';
 
 export const useIplSettings = () => {
   return useQuery({
@@ -11,7 +13,7 @@ export const useIplSettings = () => {
         .select('value')
         .eq('key', 'ipl_amount')
         .single();
-      
+
       if (error) {
         // If error (e.g., table doesn't exist yet or row missing), return default
         console.error("Error fetching IPL settings:", error);
@@ -24,13 +26,13 @@ export const useIplSettings = () => {
 
 export const useUpdateIplSettings = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async (amount: string) => {
       const { error } = await supabase
         .from('app_settings')
         .upsert({ key: 'ipl_amount', value: amount });
-      
+
       if (error) throw error;
       return amount;
     },
@@ -49,16 +51,18 @@ export const usePayIpl = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ residentId, amount, period }: { residentId: string, amount: number, period: string }) => {
-      // 1. Insert into ipl_payments
+    mutationFn: async ({ residentId, amount, periods }: { residentId: string, amount: number, periods: string[] }) => {
+      // 1. Insert into ipl_payments for each period
+      const payments = periods.map(period => ({
+        resident_id: residentId,
+        amount: amount / periods.length, // Split total amount per period
+        period: period,
+        status: 'PAID'
+      }));
+
       const { error: paymentError } = await supabase
         .from('ipl_payments')
-        .insert({
-          resident_id: residentId,
-          amount: amount,
-          period: period,
-          status: 'PAID'
-        });
+        .insert(payments);
 
       if (paymentError) throw paymentError;
 
@@ -89,30 +93,30 @@ export const useResetIplStatus = () => {
 
   return useMutation({
     mutationFn: async (residentId: string) => {
-        const { error } = await supabase
-            .from('residents')
-            .update({ status_ipl: 'Belum Lunas' })
-            .eq('id', residentId);
-        
-        if (error) throw error;
+      const { error } = await supabase
+        .from('residents')
+        .update({ status_ipl: 'Belum Lunas' })
+        .eq('id', residentId);
+
+      if (error) throw error;
     },
     onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['residents'] });
-        toast.success('Status IPL direset ke Belum Lunas');
+      queryClient.invalidateQueries({ queryKey: ['residents'] });
+      toast.success('Status IPL direset ke Belum Lunas');
     },
     onError: (error) => {
-        toast.error('Gagal mereset status');
+      toast.error('Gagal mereset status');
     }
   });
 }
 
 export const useIplPayments = () => {
-    return useQuery({
-        queryKey: ['ipl_payments'],
-        queryFn: async () => {
-            const { data, error } = await supabase
-                .from('ipl_payments')
-                .select(`
+  return useQuery({
+    queryKey: ['ipl_payments'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('ipl_payments')
+        .select(`
                     *,
                     residents (
                         nama,
@@ -120,10 +124,50 @@ export const useIplPayments = () => {
                         nomor_rumah
                     )
                 `)
-                .order('payment_date', { ascending: false });
-            
-            if (error) throw error;
-            return data;
-        }
-    });
+        .order('payment_date', { ascending: false });
+
+      if (error) throw error;
+      return data;
+    }
+  });
+};
+
+export const useResidentUnpaidPeriods = (resident: Resident | undefined) => {
+  return useQuery({
+    queryKey: ['unpaid_periods', resident?.id],
+    enabled: !!resident,
+    queryFn: async () => {
+      if (!resident) return [];
+
+      // Fetch already paid periods for this resident
+      const { data, error } = await supabase
+        .from('ipl_payments')
+        .select('period')
+        .eq('resident_id', resident.id)
+        .eq('status', 'PAID');
+
+      if (error) throw error;
+
+      const paidPeriods = data.map(p => p.period);
+      return calculateUnpaidPeriods(resident.createdAt, paidPeriods);
+    }
+  });
+};
+
+export const useResidentPaidPeriods = (residentId: string | undefined) => {
+  return useQuery({
+    queryKey: ['paid_periods', residentId],
+    enabled: !!residentId,
+    queryFn: async () => {
+      if (!residentId) return [];
+      const { data, error } = await supabase
+        .from('ipl_payments')
+        .select('period')
+        .eq('resident_id', residentId)
+        .eq('status', 'PAID');
+
+      if (error) throw error;
+      return data.map(p => p.period);
+    }
+  });
 };

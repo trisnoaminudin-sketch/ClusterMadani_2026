@@ -44,6 +44,7 @@ export interface Resident {
   statusPerkawinan: string;
   nominalIPL: string;
   statusIPL: string;
+  createdAt: Date;
 }
 
 // Convert from database format to frontend format
@@ -67,6 +68,7 @@ const fromDatabase = (row: Record<string, unknown>): Resident => ({
   statusPerkawinan: row.status_perkawinan as string,
   nominalIPL: row.nominal_ipl as string,
   statusIPL: row.status_ipl as string,
+  createdAt: row.created_at ? new Date(row.created_at as string) : new Date(),
 });
 
 // Convert from frontend format to database format

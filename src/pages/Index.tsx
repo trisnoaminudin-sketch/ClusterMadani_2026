@@ -7,7 +7,7 @@ import { ResidentList } from "@/components/ResidentList";
 import { AdminMenu } from "@/components/AdminMenu";
 import { Users, UserCheck, UserX, Calendar, FileText, Banknote, CheckCircle, Loader2, LogOut, Download, CreditCard, Key, Upload } from "lucide-react";
 import { useResidents, useAddResident, Resident, useBulkAddResidents } from "@/hooks/useResidents";
-import { useIplSettings } from "@/hooks/useIpl";
+import { useIplSettings, useResidentUnpaidPeriods } from "@/hooks/useIpl";
 import * as XLSX from "xlsx";
 import { useProfiles, useChangePassword } from "@/hooks/useProfiles";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -25,6 +25,7 @@ const Index = () => {
 
   const { data: residents = [], isLoading, error } = useResidents(restrictedBlok, restrictedNomorRumah);
   const { data: iplSettings } = useIplSettings();
+  const { data: unpaidPeriods = [] } = useResidentUnpaidPeriods(residents[0]);
   const addResidentMutation = useAddResident();
   const bulkAddResidentMutation = useBulkAddResidents();
   const changePasswordMutation = useChangePassword();
@@ -144,7 +145,8 @@ const Index = () => {
           pekerjaan: String(item.pekerjaan || ""),
           statusPerkawinan: String(item.status_perkawinan || ""),
           nominalIPL: String(item.nominal_ipl || ""),
-          statusIPL: String(item.status_ipl || "Belum Lunas")
+          statusIPL: String(item.status_ipl || "Belum Lunas"),
+          createdAt: new Date()
         }));
 
         bulkAddResidentMutation.mutate(newResidents, {
@@ -416,10 +418,10 @@ const Index = () => {
           />
           <StatCard
             title="Status IPL"
-            value={userRole === 'admin' ? `${stats.iplLunas} Warga` : (residents[0]?.statusIPL || "Belum Lunas")}
+            value={userRole === 'admin' ? `${stats.iplLunas} Warga` : (unpaidPeriods.length === 0 ? "Lunas" : "Belum Lunas")}
             icon={CheckCircle}
-            description={userRole === 'admin' ? "Sudah membayar bulan ini" : "Status pembayaran bulan ini"}
-            variant={userRole !== 'admin' && residents[0]?.statusIPL !== "Lunas" ? "destructive" : "success"}
+            description={userRole === 'admin' ? "Sudah membayar bulan ini" : (unpaidPeriods.length > 0 ? `${unpaidPeriods.length} bulan tertunggak` : "Semua tagihan lunas")}
+            variant={userRole !== 'admin' && unpaidPeriods.length > 0 ? "destructive" : "success"}
           />
         </div>
 

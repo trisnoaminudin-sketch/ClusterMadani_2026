@@ -29,8 +29,13 @@ import {
   usePayIpl,
   useResetIplStatus,
   useIplPayments,
+  useResidentUnpaidPeriods,
+  useResidentPaidPeriods,
 } from "@/hooks/useIpl";
+import { getNextPeriodsToPay } from "@/lib/ipl-utils";
+import { Resident } from "@/hooks/useResidents";
 import { AdminMenu } from "@/components/AdminMenu";
+import { toast } from "sonner";
 
 const AdminIpl = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -54,10 +59,15 @@ const AdminIpl = () => {
     updateSettingsMutation.mutate(iplAmountInput);
   };
 
-  const handlePay = (residentId: string) => {
-    const amount = parseInt(iplSettings?.value || "0");
-    const period = format(new Date(), "yyyy-MM");
-    payMutation.mutate({ residentId, amount, period });
+  const handlePay = (resident: Resident, unpaidPeriods: string[]) => {
+    const monthlyAmount = parseInt(iplSettings?.value || "0");
+    const totalAmount = monthlyAmount * unpaidPeriods.length;
+
+    payMutation.mutate({
+      residentId: resident.id,
+      amount: totalAmount,
+      periods: unpaidPeriods
+    });
   };
 
   const handleReset = (residentId: string) => {
@@ -129,6 +139,8 @@ const AdminIpl = () => {
                       <TableHead>Nama</TableHead>
                       <TableHead>Blok / No</TableHead>
                       <TableHead>Status IPL</TableHead>
+                      <TableHead>IPL Terhutang</TableHead>
+                      <TableHead>Nominal Bayar</TableHead>
                       <TableHead className="text-right">Aksi</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -147,46 +159,13 @@ const AdminIpl = () => {
                       </TableRow>
                     ) : (
                       filteredResidents?.map((resident) => (
-                        <TableRow key={resident.id}>
-                          <TableCell className="font-medium">{resident.nama}</TableCell>
-                          <TableCell>
-                            {resident.blokRumah} / {resident.nomorRumah}
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant={
-                                resident.statusIPL === "Lunas"
-                                  ? "default" // or success if available, default is black/primary
-                                  : "destructive"
-                              }
-                              className={
-                                resident.statusIPL === "Lunas"
-                                  ? "bg-green-600 hover:bg-green-700"
-                                  : ""
-                              }
-                            >
-                              {resident.statusIPL || "Belum Lunas"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {resident.statusIPL === "Lunas" ? (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleReset(resident.id)}
-                              >
-                                Batal
-                              </Button>
-                            ) : (
-                              <Button
-                                size="sm"
-                                onClick={() => handlePay(resident.id)}
-                              >
-                                Bayar
-                              </Button>
-                            )}
-                          </TableCell>
-                        </TableRow>
+                        <ResidentRow
+                          key={resident.id}
+                          resident={resident}
+                          iplSettings={iplSettings}
+                          handleReset={handleReset}
+                          handlePay={handlePay}
+                        />
                       ))
                     )}
                   </TableBody>
@@ -302,6 +281,121 @@ const AdminIpl = () => {
         </TabsContent>
       </Tabs>
     </div>
+  );
+};
+
+const ResidentRow = ({
+  resident,
+  iplSettings,
+  handleReset,
+  handlePay
+}: {
+  resident: Resident,
+  iplSettings: any,
+  handleReset: (id: string) => void,
+  handlePay: (resident: Resident, periods: string[]) => void
+}) => {
+  const { data: unpaidPeriods = [] } = useResidentUnpaidPeriods(resident);
+  const { data: paidPeriods = [] } = useResidentPaidPeriods(resident.id);
+  const [payAmount, setPayAmount] = useState<string>("");
+
+  const monthlyAmount = parseInt(iplSettings?.value || "0");
+  const totalDebt = monthlyAmount * unpaidPeriods.length;
+
+  // Calculate periods covered by the input amount
+  const periodsToCover = getNextPeriodsToPay(
+    parseInt(payAmount || "0"),
+    monthlyAmount,
+    resident.createdAt,
+    paidPeriods
+  );
+
+  const localHandlePay = () => {
+    if (!payAmount || parseInt(payAmount) <= 0) {
+      toast.error("Masukkan nominal pembayaran");
+      return;
+    }
+
+    if (periodsToCover.length === 0) {
+      toast.error(`Nominal minimal adalah Rp ${monthlyAmount.toLocaleString('id-ID')}`);
+      return;
+    }
+
+    const confirmMsg = `Bayar Rp ${parseInt(payAmount).toLocaleString('id-ID')} untuk ${periodsToCover.length} bulan (${periodsToCover.join(", ")})?`;
+
+    if (confirm(confirmMsg)) {
+      handlePay(resident, periodsToCover);
+      setPayAmount("");
+    }
+  };
+
+  return (
+    <TableRow>
+      <TableCell className="font-medium">
+        <div>{resident.nama}</div>
+        <div className="text-xs text-muted-foreground">Mendaftar: {format(resident.createdAt, "dd MMM yyyy")}</div>
+      </TableCell>
+      <TableCell>
+        {resident.blokRumah} / {resident.nomorRumah}
+      </TableCell>
+      <TableCell>
+        <div className="flex flex-col gap-1">
+          <Badge
+            variant={
+              resident.statusIPL === "Lunas" && unpaidPeriods.length === 0
+                ? "default"
+                : "destructive"
+            }
+            className={
+              resident.statusIPL === "Lunas" && unpaidPeriods.length === 0
+                ? "bg-green-600 hover:bg-green-700 w-fit"
+                : "w-fit"
+            }
+          >
+            {resident.statusIPL === "Lunas" && unpaidPeriods.length === 0 ? "Lunas" : "Belum Lunas"}
+          </Badge>
+        </div>
+      </TableCell>
+      <TableCell>
+        <span className={totalDebt > 0 ? "text-destructive font-bold" : "text-green-600 font-medium"}>
+          Rp {totalDebt.toLocaleString('id-ID')}
+        </span>
+      </TableCell>
+      <TableCell>
+        <div className="flex flex-col gap-1">
+          <Input
+            type="number"
+            placeholder="Nominal..."
+            className="w-32 h-8 text-sm"
+            value={payAmount}
+            onChange={(e) => setPayAmount(e.target.value)}
+          />
+          {periodsToCover.length > 0 && (
+            <span className="text-[10px] text-blue-600 font-medium whitespace-nowrap">
+              Melunasi {periodsToCover.length} bulan
+            </span>
+          )}
+        </div>
+      </TableCell>
+      <TableCell className="text-right">
+        {resident.statusIPL === "Lunas" && unpaidPeriods.length === 0 && !payAmount ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleReset(resident.id)}
+          >
+            Batal
+          </Button>
+        ) : (
+          <Button
+            size="sm"
+            onClick={localHandlePay}
+          >
+            Bayar
+          </Button>
+        )}
+      </TableCell>
+    </TableRow>
   );
 };
 
