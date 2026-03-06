@@ -197,3 +197,73 @@ export const useDeleteIplPayment = () => {
     }
   });
 };
+
+export const useSubmitResidentPayment = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      residentId,
+      amount,
+      periods,
+      proofFile
+    }: {
+      residentId: string,
+      amount: number,
+      periods: string[],
+      proofFile: File
+    }) => {
+      // 1. Upload proof to storage
+      const fileExt = proofFile.name.split('.').pop();
+      const fileName = `${residentId}-${Date.now()}.${fileExt}`;
+      const filePath = `receipts/${fileName}`;
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('payment-proofs')
+        .upload(filePath, proofFile);
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('payment-proofs')
+        .getPublicUrl(filePath);
+
+      const proofUrl = urlData.publicUrl;
+
+      // 2. Insert into ipl_payments for each period
+      const payments = periods.map(period => ({
+        resident_id: residentId,
+        amount: amount / periods.length,
+        period: period,
+        status: 'PAID',
+        proof_url: proofUrl
+      }));
+
+      const { error: paymentError } = await supabase
+        .from('ipl_payments')
+        .insert(payments);
+
+      if (paymentError) throw paymentError;
+
+      // 3. Update resident status_ipl
+      const { error: residentError } = await supabase
+        .from('residents')
+        .update({ status_ipl: 'Lunas' })
+        .eq('id', residentId);
+
+      if (residentError) throw residentError;
+
+      return { proofUrl, periods };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['residents'] });
+      queryClient.invalidateQueries({ queryKey: ['ipl_payments'] });
+      toast.success('Pembayaran berhasil dikirim!');
+    },
+    onError: (error: any) => {
+      console.error("Error submitting payment:", error);
+      toast.error('Gagal mengirim pembayaran: ' + (error.message || 'Error tidak diketahui'));
+    }
+  });
+};

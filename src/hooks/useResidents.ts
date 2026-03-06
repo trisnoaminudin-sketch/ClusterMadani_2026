@@ -84,27 +84,34 @@ const fromDatabase = (row: Record<string, unknown>): Resident => {
 };
 
 // Convert from frontend format to database format
-const toDatabase = (resident: Partial<Resident>): Record<string, unknown> => {
-  const data: Record<string, unknown> = {
-    nik: resident.nik,
-    nomor_kk: resident.nomorKK,
-    nama: resident.nama,
-    no_hp_kepala: resident.noHpKepala,
-    jumlah_anggota: resident.jumlahAnggota,
-    anggota_keluarga: resident.anggotaKeluarga,
-    jenis_kelamin: resident.jenisKelamin,
-    tanggal_lahir: resident.tanggalLahir,
-    alamat: resident.alamat,
-    nomor_rumah: resident.nomorRumah,
-    blok_rumah: resident.blokRumah,
-    rt: resident.rt,
-    rw: resident.rw,
-    status_kepemilikan_rumah: resident.statusKepemilikanRumah,
-    pekerjaan: resident.pekerjaan,
-    status_perkawinan: resident.statusPerkawinan,
-    nominal_ipl: resident.nominalIPL ? parseInt(resident.nominalIPL, 10) : 0,
+const toDatabase = (resident: Partial<Resident>): Record<string, any> => {
+  const data: Record<string, any> = {
+    nik: resident.nik || null,
+    nomor_kk: resident.nomorKK || null,
+    nama: resident.nama || null,
+    no_hp_kepala: resident.noHpKepala || null,
+    jumlah_anggota: typeof resident.jumlahAnggota === 'number' ? resident.jumlahAnggota : (parseInt(String(resident.jumlahAnggota), 10) || 0),
+    anggota_keluarga: resident.anggotaKeluarga || [],
+    jenis_kelamin: resident.jenisKelamin || null,
+    tanggal_lahir: resident.tanggalLahir || null,
+    alamat: resident.alamat || null,
+    nomor_rumah: resident.nomorRumah || null,
+    blok_rumah: resident.blokRumah || null,
+    rt: resident.rt || null,
+    rw: resident.rw || null,
+    status_kepemilikan_rumah: resident.statusKepemilikanRumah || null,
+    pekerjaan: resident.pekerjaan || null,
+    status_perkawinan: resident.statusPerkawinan || null,
+    nominal_ipl: resident.nominalIPL ? (parseInt(String(resident.nominalIPL).replace(/[^0-9]/g, ''), 10) || 0) : 0,
     status_ipl: resident.statusIPL || "Belum Lunas",
   };
+
+  // Ensure no undefined values are sent
+  Object.keys(data).forEach(key => {
+    if (data[key] === undefined) {
+      data[key] = null;
+    }
+  });
 
   return data;
 };
@@ -242,9 +249,10 @@ export const useBulkAddResidents = () => {
       queryClient.invalidateQueries({ queryKey: ['residents'] });
       toast.success('Daftar warga berhasil diupload');
     },
-    onError: (error: Error) => {
-      console.error('Error adding residents:', error);
-      toast.error(error.message || 'Gagal mengupload daftar warga');
+    onError: (error: any) => {
+      console.error('FULL ERROR OBJECT:', JSON.stringify(error, null, 2));
+      const errorMessage = error.message || error.details || error.hint || 'Gagal mengupload daftar warga';
+      toast.error(errorMessage);
     },
   });
 };

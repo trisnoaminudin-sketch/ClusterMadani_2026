@@ -14,6 +14,7 @@ import { useProfiles, useChangePassword } from "@/hooks/useProfiles";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PayIplDialog } from "@/components/PayIplDialog";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -35,6 +36,8 @@ const Index = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false);
+  const [uploadCount, setUploadCount] = useState(0);
 
   const handleLogout = () => {
     localStorage.removeItem("isAuthenticated");
@@ -151,12 +154,19 @@ const Index = () => {
           tanggalPendaftaran: new Date().toISOString().split('T')[0]
         }));
 
+        console.log("SENDING DATA TO SUPABASE:", newResidents);
+
         bulkAddResidentMutation.mutate(newResidents, {
-          onSuccess: () => {
+          onSuccess: (data) => {
             setIsUploading(false);
+            setUploadCount(data.length);
+            setIsSuccessDialogOpen(true);
             e.target.value = "";
           },
-          onError: () => setIsUploading(false)
+          onError: (err) => {
+            console.error("UPLOAD ERROR DETAILS:", err);
+            setIsUploading(false);
+          }
         });
       } catch (err) {
         console.error(err);
@@ -303,6 +313,12 @@ const Index = () => {
             </div>
 
             <div className="flex items-center gap-2">
+              {userRole !== 'admin' && residents.length > 0 && (
+                <PayIplDialog 
+                  resident={residents[0]} 
+                  monthlyAmount={parseInt(iplSettings?.value || "0")} 
+                />
+              )}
               {userRole === "admin" && (
                 <AdminMenu onExport={handleExportData} />
               )}
@@ -460,6 +476,29 @@ const Index = () => {
 
         {/* List */}
         <ResidentList residents={residents} />
+
+        {/* Success Dialog */}
+        <Dialog open={isSuccessDialogOpen} onOpenChange={setIsSuccessDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+                Upload Berhasil
+              </DialogTitle>
+              <DialogDescription>
+                Berhasil menambahkan {uploadCount} data warga ke dalam sistem.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <p className="text-sm text-muted-foreground">
+                Data telah berhasil disimpan dan daftar warga akan segera diperbarui.
+              </p>
+            </div>
+            <DialogFooter>
+              <Button onClick={() => setIsSuccessDialogOpen(false)}>Tutup</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

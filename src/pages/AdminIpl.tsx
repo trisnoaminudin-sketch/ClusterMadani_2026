@@ -217,20 +217,21 @@ const AdminIpl = () => {
                         <TableHead>Nama Warga</TableHead>
                         <TableHead>Periode</TableHead>
                         <TableHead>Jumlah</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Aksi</TableHead>
+                         <TableHead>Status</TableHead>
+                         <TableHead>Bukti</TableHead>
+                         <TableHead className="text-right">Aksi</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {isLoadingHistory ? (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center py-8">
+                          <TableCell colSpan={7} className="text-center py-8">
                             Loading...
                           </TableCell>
                         </TableRow>
                       ) : paymentHistory?.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center py-8">
+                          <TableCell colSpan={7} className="text-center py-8">
                             Belum ada data transaksi
                           </TableCell>
                         </TableRow>
@@ -240,8 +241,9 @@ const AdminIpl = () => {
                           payment_date: string;
                           residents: { nama: string; blok_rumah: string; nomor_rumah: string } | null;
                           period: string;
-                          amount: string;
-                          status: string
+                           amount: string;
+                           status: string;
+                           proof_url?: string;
                         }) => (
                           <TableRow key={payment.id}>
                             <TableCell>
@@ -262,11 +264,25 @@ const AdminIpl = () => {
                             <TableCell>
                               Rp {parseInt(payment.amount).toLocaleString("id-ID")}
                             </TableCell>
-                            <TableCell>
-                              <Badge variant="outline" className="text-green-600 border-green-600">
-                                {payment.status}
-                              </Badge>
-                            </TableCell>
+                             <TableCell>
+                               <Badge variant="outline" className="text-green-600 border-green-600">
+                                 {payment.status}
+                               </Badge>
+                             </TableCell>
+                             <TableCell>
+                               {payment.proof_url ? (
+                                 <a 
+                                   href={payment.proof_url} 
+                                   target="_blank" 
+                                   rel="noopener noreferrer"
+                                   className="text-primary hover:underline flex items-center gap-1 text-xs"
+                                 >
+                                   Lihat Bukti
+                                 </a>
+                               ) : (
+                                 <span className="text-muted-foreground text-xs italic">Tidak ada</span>
+                               )}
+                             </TableCell>
                             <TableCell className="text-right">
                               <Button
                                 variant="ghost"
